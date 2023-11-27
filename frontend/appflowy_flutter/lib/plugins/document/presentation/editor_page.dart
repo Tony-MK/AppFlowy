@@ -134,6 +134,14 @@ class _AppFlowyEditorPageState extends State<AppFlowyEditorPage> {
           style: styleCustomizer.selectionMenuStyleBuilder(),
         ),
 
+        // emoji shortcut command
+        EmojiShortcutService(
+          context: context,
+          editorState: widget.editorState,
+        ).emojiShortcutCommand(
+          context,
+        ),
+
         ...standardCharacterShortcutEvents
           ..removeWhere(
             (element) => element == slashCommand,
