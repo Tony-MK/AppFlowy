@@ -135,10 +135,7 @@ class _AppFlowyEditorPageState extends State<AppFlowyEditorPage> {
         ),
 
         // emoji shortcut command
-        EmojiShortcutService(
-          context: context,
-          editorState: widget.editorState,
-        ).emojiShortcutCommand(
+        EmojiShortcutService().customEmojiMenuLink(
           context,
         ),
 
