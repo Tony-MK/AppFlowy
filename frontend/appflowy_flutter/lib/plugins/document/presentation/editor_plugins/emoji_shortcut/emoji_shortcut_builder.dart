@@ -22,11 +22,11 @@ final arrowKeys = {
   LogicalKeyboardKey.tab: emojiNumberPerRow,
 };
 
-class EmojiPickerShortcutView extends EmojiPickerBuilder {
+class ShortcutEmojiPickerView extends EmojiPickerBuilder {
   final EditorState editorState;
   final VoidCallback onExit;
 
-  const EmojiPickerShortcutView(
+  const ShortcutEmojiPickerView(
     EmojiPickerConfig config,
     EmojiViewState state,
     this.editorState,
@@ -38,31 +38,31 @@ class EmojiPickerShortcutView extends EmojiPickerBuilder {
   ShortcutEmojiPickerViewState createState() => ShortcutEmojiPickerViewState();
 }
 
-class ShortcutEmojiPickerViewState extends State<EmojiPickerShortcutView>
+class ShortcutEmojiPickerViewState extends State<ShortcutEmojiPickerView>
     with TickerProviderStateMixin {
-  // Controllers
-  final TextEditingController _emojiController = TextEditingController();
   PageController? _pageController;
   TabController? _tabController;
-
-  // Focuse
-  final FocusNode _focusNode = FocusNode(debugLabel: 'popup_list_widget');
+  final TextEditingController _emojiController = TextEditingController();
   final FocusNode _emojiFocusNode = FocusNode();
-
   EmojiCategoryGroup searchEmojiList =
       EmojiCategoryGroup(EmojiCategory.SEARCH, <Emoji>[]);
-
+  final _focusNode = FocusNode(debugLabel: 'popup_list_widget');
   int _selectedIndex = 0;
+  final Color selectedItemColor = const Color(0xFFE0F8FF);
+  final resultsFilterCount = 35;
 
-  bool isEmojiSearching() =>
+  bool get isEmojiSearching =>
       searchEmojiList.emoji.isNotEmpty || _emojiController.text.isNotEmpty;
 
   @override
   void initState() {
+    super.initState();
     var initCategory = widget.state.emojiCategoryGroupList.indexWhere(
       (element) => element.category == widget.config.initCategory,
     );
-    initCategory = initCategory == -1 ? 0 : initCategory;
+    if (initCategory == -1) {
+      initCategory = 0;
+    }
     _tabController = TabController(
       initialIndex: initCategory,
       length: widget.state.emojiCategoryGroupList.length,
@@ -74,107 +74,119 @@ class ShortcutEmojiPickerViewState extends State<EmojiPickerShortcutView>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
-
-    super.initState();
   }
 
   @override
   void dispose() {
     _emojiController.dispose();
     _emojiFocusNode.dispose();
-    _pageController?.dispose();
-    _tabController?.dispose();
     super.dispose();
   }
 
   KeyEventResult _onKey(FocusNode node, RawKeyEvent event) {
-    final catEmoji = isEmojiSearching()
+    final catEmoji = isEmojiSearching
         ? searchEmojiList
         : widget.state.emojiCategoryGroupList[_tabController!.index];
 
     final List<Emoji> showingItems = catEmoji.emoji;
-
-    Log.keyboard.debug('Emoji Shortcut - onKey Event: $event');
+    Log.keyboard.debug('colon command, on key $event');
     if (event is! RawKeyDownEvent) {
       return KeyEventResult.ignored;
-    } else if (event.logicalKey == LogicalKeyboardKey.enter) {
+    }
+
+    final arrowKeys = [
+      LogicalKeyboardKey.arrowLeft,
+      LogicalKeyboardKey.arrowRight,
+      LogicalKeyboardKey.arrowUp,
+      LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.tab
+    ];
+
+    if (event.logicalKey == LogicalKeyboardKey.enter) {
       if (_emojiController.text.isEmpty) {
         widget.onExit();
         return KeyEventResult.ignored;
-      } else if (showingItems.isNotEmpty) {
-        _deleteLastCharacters(length: _emojiController.text.length + 1);
-        widget.state.onEmojiSelected(
-          EmojiCategory.SEARCH,
-          showingItems[_selectedIndex],
-        );
-        widget.onExit();
       }
+      if (showingItems.isEmpty) {
+        return KeyEventResult.handled;
+      }
+      _deleteLastCharacters(length: _emojiController.text.length + 1);
 
-      return KeyEventResult.handled;
-
-      // Close Widget when esc is pressed
-    } else if (event.logicalKey == LogicalKeyboardKey.escape) {
+      widget.state.onEmojiSelected(
+        EmojiCategory.SEARCH,
+        showingItems[_selectedIndex],
+      );
       widget.onExit();
       return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.escape) {
+      widget.onExit();
+
+      return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.space) {
-      if (_emojiController.text.isEmpty) widget.onExit();
+      if (_emojiController.text.isEmpty) {
+        widget.onExit();
+      }
       return KeyEventResult.ignored;
     } else if (event.logicalKey == LogicalKeyboardKey.backspace) {
       if (_emojiController.text.isEmpty) {
         widget.onExit();
-        return KeyEventResult.handled;
-      }
-      _emojiController.text =
-          _emojiController.text.substring(0, _emojiController.text.length - 1);
-
-      _deleteLastCharacters();
-      if (_emojiController.text.isEmpty) {
-        widget.onExit();
       } else {
+        _emojiController.text = _emojiController.text
+            .substring(0, _emojiController.text.length - 1);
         _searchEmoji();
       }
-
+      _deleteLastCharacters();
       return KeyEventResult.handled;
-    } else if (!arrowKeys.containsKey(event.logicalKey)) {
-      if (event.character == null) return KeyEventResult.ignored;
+    } else if (event.character != null &&
+        !arrowKeys.contains(event.logicalKey)) {
       _emojiController.text += event.character!;
       _searchEmoji();
-      _insertText(event.character!);
+      widget.editorState.insertTextAtCurrentSelection(event.character!);
       return KeyEventResult.handled;
     }
 
-    var newSelectedIndex = _selectedIndex + arrowKeys[event.logicalKey]!;
-
-    if (event.logicalKey == LogicalKeyboardKey.tab &&
-        newSelectedIndex >= showingItems.length) {
-      newSelectedIndex =
-          ((newSelectedIndex % emojiNumberPerRow) + 1) % emojiNumberPerRow;
+    var newSelectedIndex = _selectedIndex;
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      newSelectedIndex -= 1;
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      newSelectedIndex += 1;
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      newSelectedIndex -= widget.config.emojiNumberPerRow;
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      newSelectedIndex += widget.config.emojiNumberPerRow;
+    } else if (event.logicalKey == LogicalKeyboardKey.tab) {
+      newSelectedIndex += widget.config.emojiNumberPerRow;
+      ;
+      final currRow = (newSelectedIndex) % widget.config.emojiNumberPerRow;
+      if (newSelectedIndex >= showingItems.length) {
+        newSelectedIndex = (currRow + 1) % widget.config.emojiNumberPerRow;
+      }
     }
 
-    setState(() =>
-        _selectedIndex = newSelectedIndex.clamp(0, showingItems.length - 1));
+    if (newSelectedIndex != _selectedIndex) {
+      setState(() {
+        _selectedIndex = newSelectedIndex.clamp(0, showingItems.length - 1);
+      });
+      return KeyEventResult.handled;
+    }
 
-    return KeyEventResult.handled;
+    return KeyEventResult.ignored;
   }
 
   void _searchEmoji() {
     final String query = _emojiController.text.toLowerCase();
-    searchEmojiList.emoji.clear();
-    if (query.isEmpty) {
-      _pageController!.jumpToPage(
-        _tabController!.index,
-      );
-      return setState(() {});
-    }
 
+    searchEmojiList.emoji.clear();
     for (final element in widget.state.emojiCategoryGroupList) {
       searchEmojiList.emoji.addAll(
-        element.emoji
-            .where((item) => item.name.toLowerCase().contains(query))
-            .toList(),
+        element.emoji.where((item) {
+          return item.name.toLowerCase().replaceAll(" ", "_").contains(query);
+        }).toList(),
       );
+      searchEmojiList.emoji =
+          searchEmojiList.emoji.take(resultsFilterCount).toList();
     }
-    return setState(() {});
+    setState(() {});
   }
 
   void _deleteLastCharacters({int length = 1}) {
@@ -196,71 +208,6 @@ class ShortcutEmojiPickerViewState extends State<EmojiPickerShortcutView>
         length,
       );
     widget.editorState.apply(transaction);
-  }
-
-  void _insertText(String text) {
-    final selection = widget.editorState.selection;
-    if (selection == null || !selection.isSingle) {
-      return;
-    }
-    final node = widget.editorState.getNodeAtPath(selection.end.path);
-    if (node == null) {
-      return;
-    }
-    final transaction = widget.editorState.transaction
-      ..insertText(
-        node,
-        selection.end.offset,
-        text,
-      );
-    widget.editorState.apply(transaction);
-  }
-
-  // Build Function
-  @override
-  Widget build(BuildContext context) {
-    return Focus(
-      focusNode: _focusNode,
-      onKey: _onKey,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final emojiSize = widget.config.getEmojiSize(constraints.maxWidth);
-          return Visibility(
-            visible: _emojiController.text.isNotEmpty,
-            child: Container(
-              color: widget.config.bgColor,
-              padding: const EdgeInsets.all(5.0),
-              child: Column(
-                children: [
-                  Flexible(
-                    child: PageView.builder(
-                      itemCount: searchEmojiList.emoji.isNotEmpty
-                          ? 1
-                          : widget.state.emojiCategoryGroupList.length,
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      onPageChanged: (index) {
-                        _tabController!.animateTo(
-                          index,
-                          duration: widget.config.tabIndicatorAnimDuration,
-                        );
-                      },
-                      itemBuilder: (context, index) {
-                        final EmojiCategoryGroup catEmoji = isEmojiSearching()
-                            ? searchEmojiList
-                            : widget.state.emojiCategoryGroupList[index];
-
-                        return _buildPage(emojiSize, catEmoji);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   Widget _buildButtonWidget({
@@ -362,6 +309,52 @@ class ShortcutEmojiPickerViewState extends State<EmojiPickerShortcutView>
         widget.config.noRecentsText,
         style: widget.config.noRecentsStyle,
         textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      focusNode: _focusNode,
+      onKey: _onKey,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final emojiSize = widget.config.getEmojiSize(constraints.maxWidth);
+          return Visibility(
+            visible: _emojiController.text.isNotEmpty,
+            child: Container(
+              color: widget.config.bgColor,
+              padding: const EdgeInsets.all(5.0),
+              child: Column(
+                children: [
+                  Flexible(
+                    child: PageView.builder(
+                      itemCount: searchEmojiList.emoji.isNotEmpty
+                          ? 1
+                          : widget.state.emojiCategoryGroupList.length,
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      onPageChanged: (index) {
+                        _tabController!.animateTo(
+                          index,
+                          duration: widget.config.tabIndicatorAnimDuration,
+                        );
+                      },
+                      itemBuilder: (context, index) {
+                        final EmojiCategoryGroup catEmoji = isEmojiSearching
+                            ? searchEmojiList
+                            : widget.state.emojiCategoryGroupList[index];
+
+                        return _buildPage(emojiSize, catEmoji);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
