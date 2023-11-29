@@ -19,7 +19,6 @@ const EmojiPickerConfig config = EmojiPickerConfig(
 );
 
 class EmojiShortcutService {
-  Alignment _alignment = Alignment.topLeft;
   late OverlayEntry emojiPickerMenuEntry;
 
   customEmojiMenuLink(
@@ -78,41 +77,39 @@ class EmojiShortcutService {
     //  Just subtract the padding here as a result.
     const menuHeight = 200.0;
     const menuWidth = 300.0;
-    const menuOffset = Offset(0, 10);
+    const menuOffset = Offset(0, 8);
     final editorOffset =
         editorState.renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
     final editorHeight = editorState.renderBox!.size.height;
     final editorWidth = editorState.renderBox!.size.width;
 
-    final rect = selectionRects.first;
-    // show below default
-    _alignment = Alignment.bottomLeft;
-    final bottomRight = rect.bottomRight;
-    var offset = bottomRight + menuOffset;
+    // Cursor
+    final cursor = selectionRects.first;
 
-    // overflow Y axis
-    if (offset.dy + menuHeight >= editorOffset.dy + editorHeight) {
-      // show above
-      offset = rect.topRight - menuOffset;
-      _alignment = Alignment.topLeft;
+    // By default display it under the cursor
+    var offset = cursor.bottomCenter + menuOffset;
+
+    // But if there is no space at bottom of the editor
+    if (offset.dy + menuHeight >= editorHeight + editorOffset.dy) {
+      // Display it above the cursor
+      offset = cursor.topCenter - menuOffset;
+      offset = Offset(offset.dx, offset.dy - menuHeight);
     }
 
-    final alignment = _alignment;
-    offset = offset;
-    final top = alignment == Alignment.bottomLeft ? offset.dy : null;
-    final bottom = alignment == Alignment.topLeft ? offset.dy : null;
+    final bool xAxisOverflow =
+        offset.dx + menuWidth >= editorWidth + editorOffset.dy;
 
     keepEditorFocusNotifier.increase();
 
     emojiPickerMenuEntry = FullScreenOverlayEntry(
-      top: top,
-      bottom: bottom,
-      left: min(editorWidth - menuWidth, offset.dx),
+      left: xAxisOverflow ? null : offset.dx,
+      right: xAxisOverflow ? 0 : null,
+      top: offset.dy,
       dismissCallback: () => keepEditorFocusNotifier.decrease(),
       builder: (context) => Material(
         child: Container(
-          width: 300,
-          height: 250,
+          width: menuWidth,
+          height: menuHeight,
           padding: const EdgeInsets.all(4.0),
           child: EmojiPicker(
             onEmojiSelected: (category, emoji) {
