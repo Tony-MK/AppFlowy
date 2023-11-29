@@ -11,8 +11,8 @@ import 'package:flowy_infra_ui/style_widget/scrolling/styled_scroll_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-const int emojiNumberPerRow = 5;
-const double emojiSizeMax = 25;
+const int emojiNumberPerRow = 8;
+const double emojiSizeMax = 40;
 
 final arrowKeys = {
   LogicalKeyboardKey.arrowRight: 1,
@@ -226,7 +226,7 @@ class ShortcutEmojiPickerViewState extends State<ShortcutEmojiPickerView>
     );
   }
 
-  Widget _buildPage(double emojiSize, EmojiCategoryGroup categoryEmoji) {
+  Widget? _buildPage(double emojiSize, EmojiCategoryGroup categoryEmoji) {
     // Display notice if recent has no entries yet
     final scrollController = ScrollController();
 
@@ -235,7 +235,7 @@ class ShortcutEmojiPickerViewState extends State<ShortcutEmojiPickerView>
       return _buildNoRecent();
     } else if (categoryEmoji.category == EmojiCategory.SEARCH &&
         categoryEmoji.emoji.isEmpty) {
-      return const Center(child: Text("No Emoji Found"));
+      return null;
     }
     // Build page normally
     return ScrollbarListStack(
