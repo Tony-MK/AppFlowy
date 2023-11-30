@@ -5,6 +5,10 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 
+const menuHeight = 200.0;
+const menuWidth = 300.0;
+const menuOffset = Offset(0, 8);
+
 const EmojiPickerConfig config = EmojiPickerConfig(
   emojiNumberPerRow: emojiNumberPerRow,
   emojiSizeMax: emojiSizeMax,
@@ -28,9 +32,7 @@ class EmojiShortcutService {
       key: 'show emoji selection menu',
       character: character,
       handler: (editorState) async {
-        final container = Overlay.of(context);
         showEmojiPickerMenu(
-          container,
           editorState,
           context,
           shouldInsertKeyword,
@@ -41,68 +43,58 @@ class EmojiShortcutService {
   }
 
   void showEmojiPickerMenu(
-    OverlayState container,
     EditorState editorState,
     BuildContext context,
     bool shouldInsertCharacter,
   ) async {
+    final container = Overlay.of(context);
     final selectionService = editorState.service.selectionService;
     final selectionRects = selectionService.selectionRects;
     if (selectionRects.isEmpty) {
       return;
-    }
-
-    if (shouldInsertCharacter) {
+    } else if (shouldInsertCharacter) {
+      // Have no idea why the focus will lose after inserting on web.
       if (foundation.kIsWeb) {
-        // Have no idea why the focus will lose after inserting on web.
-        keepEditorFocusNotifier.value += 1;
-        await editorState.insertTextAtPosition(
-          ':',
-          position: editorState.selection!.start,
-        );
+        keepEditorFocusNotifier.increase();
+      }
+      await editorState.insertTextAtPosition(
+        ':',
+        position: editorState.selection!.start,
+      );
+      if (foundation.kIsWeb) {
         WidgetsBinding.instance.addPostFrameCallback(
-          (timeStamp) => keepEditorFocusNotifier.value -= 1,
-        );
-      } else {
-        await editorState.insertTextAtPosition(
-          ':',
-          position: editorState.selection!.start,
+          (_) => keepEditorFocusNotifier.decrease(),
         );
       }
     }
-    // Workaround: We can customize the padding through the [EditorStyle],
-    //  but the coordinates of overlay are not properly converted currently.
-    //  Just subtract the padding here as a result.
-    const menuHeight = 200.0;
-    const menuWidth = 300.0;
-    const menuOffset = Offset(0, 8);
-    final editorOffset =
-        editorState.renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
-    final editorHeight = editorState.renderBox!.size.height;
-    final editorWidth = editorState.renderBox!.size.width;
-
-    // Cursor
-    final cursor = selectionRects.first;
-
-    // By default display it under the cursor
-    var offset = cursor.bottomLeft + menuOffset;
-
-    // But if there is no space at bottom of the editor
-    if (offset.dy + menuHeight >= editorHeight + editorOffset.dy) {
-      // Display it above the cursor
-      offset = cursor.topLeft - menuOffset;
-      offset = Offset(offset.dx, offset.dy - menuHeight);
-    }
-
-    final bool xAxisOverflow =
-        offset.dx + menuWidth >= editorWidth + editorOffset.dx;
 
     keepEditorFocusNotifier.increase();
 
+    final editorHeight = editorState.renderBox!.size.height;
+    final editorWidth = editorState.renderBox!.size.width;
+    final editorOffset =
+        editorState.renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
+
+    // Cursor location
+    final cursor = selectionRects.first;
+
+    // By default, display the menu under the cursor
+    var dy = cursor.bottomLeft.dy + menuOffset.dy + menuHeight;
+
+    // Determine if there is enough space under the cursor to display the menu
+    if (dy >= editorHeight + editorOffset.dy) {
+      // If not, display the menu above the cursor
+      dy = cursor.topLeft.dy - menuOffset.dy - menuHeight;
+    }
+
+    // Check if emoji menu is will overflow on right side of editor
+    final bool dxOverflow =
+        cursor.bottomLeft.dx + menuWidth >= editorWidth + editorOffset.dx;
+
     emojiPickerMenuEntry = FullScreenOverlayEntry(
-      left: xAxisOverflow ? null : offset.dx,
-      right: xAxisOverflow ? 0 : null,
-      top: offset.dy,
+      top: dy,
+      right: dxOverflow ? 0 : null,
+      left: dxOverflow ? null : cursor.bottomLeft.dx,
       dismissCallback: () => keepEditorFocusNotifier.decrease(),
       builder: (context) => Material(
         child: Container(
@@ -110,14 +102,14 @@ class EmojiShortcutService {
           height: menuHeight,
           padding: const EdgeInsets.all(4.0),
           child: EmojiPicker(
-            onEmojiSelected: (category, emoji) {
-              editorState.insertTextAtCurrentSelection(emoji.emoji);
-            },
             config: config,
             customWidget: (config, state) {
-              return ShortcutEmojiPickerView(config, state, editorState, () {
-                emojiPickerMenuEntry.remove();
+              return EmojiShortcutPickerView(config, state, editorState, () {
+                emojiPickerMenuEntry.remove;
               });
+            },
+            onEmojiSelected: (category, emoji) {
+              editorState.insertTextAtCurrentSelection(emoji.emoji);
             },
           ),
         ),

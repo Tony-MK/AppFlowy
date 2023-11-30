@@ -12,25 +12,28 @@ void main() {
 
   group('emoji shortcut in document', () {
     testWidgets('insert emoji', (tester) async {
-      await tester.initializeAppFlowy();
-      await tester.tapGoButton();
-      //await insertingEmoji(tester);
+      doTest(tester, insertingEmoji);
     });
 
     testWidgets('insert emoji with arrow keys', (tester) async {
-      await tester.initializeAppFlowy();
-      await tester.tapGoButton();
-      await insertingEmojiWithArrowKeys(tester);
+      doTest(tester, insertingEmojiWithArrowKeys);
     });
   });
+}
+
+void doTest(WidgetTester tester, Function func) async {
+  await tester.initializeAppFlowy();
+  await tester.tapGoButton();
+  await createDocumentAndOpenMenu(tester);
+  await func(tester);
+  checkEmoji(tester);
+  await tester.wait(5000);
 }
 
 // search the emoji list with keyword 'grinning' and insert emoji
 Future<void> insertingEmoji(
   WidgetTester tester,
 ) async {
-  await createDocumentAndOpenMenu(tester);
-
   // type 'grinning'
   await tester.simulateKeyEvent(LogicalKeyboardKey.keyG);
   await tester.simulateKeyEvent(LogicalKeyboardKey.keyR);
@@ -41,12 +44,6 @@ Future<void> insertingEmoji(
   await tester.simulateKeyEvent(LogicalKeyboardKey.keyN);
   await tester.simulateKeyEvent(LogicalKeyboardKey.keyG);
   await tester.wait(500);
-
-  // insert emoji
-  await tester.simulateKeyEvent(LogicalKeyboardKey.enter);
-  final editorState = tester.editor.getCurrentEditorState();
-  final text = editorState.document.last!.delta!.toPlainText();
-  expect(text, "😃");
 }
 
 // search the emoji list with keyword 's'
@@ -55,8 +52,6 @@ Future<void> insertingEmoji(
 Future<void> insertingEmojiWithArrowKeys(
   WidgetTester tester,
 ) async {
-  await createDocumentAndOpenMenu(tester);
-
   // type 's'
   await tester.simulateKeyEvent(LogicalKeyboardKey.keyS);
   await tester.wait(500);
@@ -66,10 +61,13 @@ Future<void> insertingEmojiWithArrowKeys(
   await tester.simulateKeyEvent(LogicalKeyboardKey.arrowDown);
   await tester.simulateKeyEvent(LogicalKeyboardKey.arrowLeft);
   await tester.simulateKeyEvent(LogicalKeyboardKey.arrowUp);
+}
+
+void checkEmoji(WidgetTester tester) async {
+  await tester.wait(80);
 
   // insert emoji
   await tester.simulateKeyEvent(LogicalKeyboardKey.enter);
-  await tester.wait(80);
 
   final editorState = tester.editor.getCurrentEditorState();
   final text = editorState.document.last!.delta!.toPlainText();
@@ -77,10 +75,8 @@ Future<void> insertingEmojiWithArrowKeys(
 }
 
 Future<void> createDocumentAndOpenMenu(WidgetTester tester) async {
-  final name = 'document_${uuid()}';
-
   await tester.createNewPageWithName(
-    name: name,
+    name: 'document_${uuid()}',
     layout: ViewLayoutPB.Document,
     openAfterCreated: false,
   );
