@@ -85,17 +85,17 @@ class EmojiShortcutService {
     final cursor = selectionRects.first;
 
     // By default display it under the cursor
-    var offset = cursor.bottomCenter + menuOffset;
+    var offset = cursor.bottomLeft + menuOffset;
 
     // But if there is no space at bottom of the editor
     if (offset.dy + menuHeight >= editorHeight + editorOffset.dy) {
       // Display it above the cursor
-      offset = cursor.topCenter - menuOffset;
+      offset = cursor.topLeft - menuOffset;
       offset = Offset(offset.dx, offset.dy - menuHeight);
     }
 
     final bool xAxisOverflow =
-        offset.dx + menuWidth >= editorWidth + editorOffset.dy;
+        offset.dx + menuWidth >= editorWidth + editorOffset.dx;
 
     keepEditorFocusNotifier.increase();
 

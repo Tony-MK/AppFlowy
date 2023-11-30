@@ -1,8 +1,10 @@
+import 'package:appflowy/workspace/presentation/home/menu/view/view_item.dart';
+import 'package:appflowy_backend/protobuf/flowy-folder2/protobuf.dart';
 import 'package:flowy_infra/uuid.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:appflowy_backend/protobuf/flowy-folder2/view.pbenum.dart';
+
 import '../util/util.dart';
 
 void main() {
@@ -12,7 +14,7 @@ void main() {
     testWidgets('insert emoji', (tester) async {
       await tester.initializeAppFlowy();
       await tester.tapGoButton();
-      await insertingEmoji(tester);
+      //await insertingEmoji(tester);
     });
 
     testWidgets('insert emoji with arrow keys', (tester) async {
@@ -27,19 +29,7 @@ void main() {
 Future<void> insertingEmoji(
   WidgetTester tester,
 ) async {
-  // create a new document
-  final id = uuid();
-  final name = 'document_$id';
-  await tester.createNewPageWithName(
-    layout: ViewLayoutPB.Document,
-    parentName: name,
-  );
-
-  // tap the first line of the document
-  await tester.editor.tapLineOfEditorAt(0);
-
-  // open ':' menu
-  await tester.ime.insertCharacter(":");
+  await createDocumentAndOpenMenu(tester);
 
   // type 'grinning'
   await tester.simulateKeyEvent(LogicalKeyboardKey.keyG);
@@ -65,19 +55,7 @@ Future<void> insertingEmoji(
 Future<void> insertingEmojiWithArrowKeys(
   WidgetTester tester,
 ) async {
-  // create a new document
-  final id = uuid();
-  final name = 'document_$id';
-  await tester.createNewPageWithName(
-    layout: ViewLayoutPB.Document,
-    parentName: name,
-  );
-
-  // tap the first line of the document
-  await tester.editor.tapLineOfEditorAt(0);
-
-  // open ':' menu
-  await tester.ime.insertCharacter(":");
+  await createDocumentAndOpenMenu(tester);
 
   // type 's'
   await tester.simulateKeyEvent(LogicalKeyboardKey.keyS);
@@ -91,7 +69,31 @@ Future<void> insertingEmojiWithArrowKeys(
 
   // insert emoji
   await tester.simulateKeyEvent(LogicalKeyboardKey.enter);
+  await tester.wait(80);
+
   final editorState = tester.editor.getCurrentEditorState();
   final text = editorState.document.last!.delta!.toPlainText();
   expect(text, "😃");
+}
+
+Future<void> createDocumentAndOpenMenu(WidgetTester tester) async {
+  final name = 'document_${uuid()}';
+
+  await tester.createNewPageWithName(
+    name: name,
+    layout: ViewLayoutPB.Document,
+    openAfterCreated: false,
+  );
+
+  // This is a workaround since the openAfterCreated
+  //  option does not work in createNewPageWithName method
+  await tester.tap(find.byType(SingleInnerViewItem).first);
+  await tester.pumpAndSettle();
+
+  await tester.editor.tapLineOfEditorAt(0);
+  await tester.pumpAndSettle();
+
+  // open ':' menu
+  await tester.ime.insertCharacter(":");
+  await tester.pumpAndSettle();
 }

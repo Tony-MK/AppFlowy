@@ -200,7 +200,6 @@ class ShortcutEmojiPickerViewState extends State<ShortcutEmojiPickerView>
       return;
     }
 
-    // widget.onSelectionUpdate();
     final transaction = widget.editorState.transaction
       ..deleteText(
         node,
