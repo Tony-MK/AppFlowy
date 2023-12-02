@@ -2,9 +2,7 @@
     "[dart]": {
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
-        "editor.rulers": [
-            80
-        ],
+        "editor.rulers": [80],
         "editor.selectionHighlight": false,
         "editor.suggest.snippetsPreventQuickSuggestions": false,
         "editor.suggestSelection": "first",
@@ -13,16 +11,12 @@
     },
     "[javascript]": {
         "editor.formatOnSave": true,
-        "editor.rulers": [
-            80
-        ],
+        "editor.rulers": [80],
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[typescript]": {
         "editor.formatOnSave": true,
-        "editor.rulers": [
-            80
-        ],
+        "editor.rulers": [80],
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "svgviewer.enableautopreview": true,
