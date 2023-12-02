@@ -39,13 +39,4 @@
     },
     "editor.formatOnSave": true,
     "files.eol": "\n",
-    "cSpell.words": [
-        "appflowy",
-        "emji",
-        "flowy",
-        "gringing",
-        "protobuf",
-        "recents",
-        "vsync"
-    ],
 }
