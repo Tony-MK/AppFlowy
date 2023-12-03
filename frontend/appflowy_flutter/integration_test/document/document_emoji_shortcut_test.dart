@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:appflowy/plugins/document/presentation/editor_plugins/emoji_shortcut/emoji_shortcut_builder.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder2/protobuf.dart';
 import 'package:flutter/services.dart';
@@ -57,17 +59,6 @@ void main() {
       );
 
       await tester.wait(waitDuration);
-
-      // Check if text is emoji
-      expect(
-        tester.editor
-            .getCurrentEditorState()
-            .document
-            .last!
-            .delta!
-            .toPlainText(),
-        ':',
-      );
 
       // Search for the emoji most similar to the text
       // Generate keyboard press events

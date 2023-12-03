@@ -65,6 +65,10 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
     if (initCategory == -1) {
       initCategory = 0;
     }
+    
+    while (widget.state.emojiCategoryGroupList[initCategory].emoji.isEmpty && initCategory < widget.state.emojiCategoryGroupList.length){
+      initCategory++;
+    }
     _tabController = TabController(
       initialIndex: initCategory,
       length: widget.state.emojiCategoryGroupList.length,
