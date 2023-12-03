@@ -2,6 +2,7 @@ import 'package:appflowy/workspace/presentation/settings/widgets/emoji_picker/sr
 import 'package:appflowy/workspace/presentation/settings/widgets/emoji_picker/src/emoji_picker.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/emoji_shortcut/emoji_shortcut_builder.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 
 const double menuWidth = 300.0;
@@ -22,13 +23,14 @@ const EmojiPickerConfig config = EmojiPickerConfig(
 CharacterShortcutEvent emojiShortcutCommand(
   BuildContext context, {
   String character = ':',
-  bool shouldInsertKeyword = true,
+  bool shouldInsertCharacter = true,
 }) {
   return CharacterShortcutEvent(
     key: 'show emoji selection menu',
     character: character,
     handler: (editorState) async {
-      opensEmojiShortcutPicker(
+      openEmojiShortcutPicker(
+        shouldInsertCharacter,
         editorState,
         context,
       );
@@ -37,12 +39,27 @@ CharacterShortcutEvent emojiShortcutCommand(
   );
 }
 
-void opensEmojiShortcutPicker(
+void openEmojiShortcutPicker(
+  bool shouldInsertCharacter,
   EditorState editorState,
   BuildContext context,
 ) async {
   final selectionRects = editorState.service.selectionService.selectionRects;
-  if (selectionRects.isEmpty) return;
+  if (selectionRects.isEmpty) {
+    return;
+  } else if (shouldInsertCharacter) {
+    // Have no idea why the focus will lose after inserting on web.
+    if (foundation.kIsWeb) {
+      keepEditorFocusNotifier.increase();
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => keepEditorFocusNotifier.decrease(),
+      );
+    }
+    await editorState.insertTextAtPosition(
+      ':',
+      position: editorState.selection!.start,
+    );
+  }
 
   final editorHeight = editorState.renderBox!.size.height;
   final editorWidth = editorState.renderBox!.size.width;

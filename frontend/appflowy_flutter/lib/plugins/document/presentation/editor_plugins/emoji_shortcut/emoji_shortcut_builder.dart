@@ -71,6 +71,8 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
     );
     _pageController = PageController(initialPage: initCategory);
     _emojiFocusNode.requestFocus();
+
+    //widget.editorState.insertTextAtCurrentSelection(":");
     super.initState();
   }
 
@@ -112,21 +114,18 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
         return KeyEventResult.handled;
 
       case LogicalKeyboardKey.space || LogicalKeyboardKey.tab:
-        if (_emojiController.text.isEmpty || showingItems.isEmpty) {
-          widget.onExit();
-          return KeyEventResult.handled;
+        if (showingItems.isNotEmpty || _emojiController.text.isEmpty) {
+          return KeyEventResult.ignored;
         }
-        return KeyEventResult.ignored;
+        widget.onExit();
+        return KeyEventResult.handled;
 
       case LogicalKeyboardKey.enter:
         if (showingItems.isEmpty) {
-          if (_emojiController.text.isEmpty) {
-            widget.onExit();
-            return KeyEventResult.ignored;
-          }
-          _deleteLastCharacters(_emojiController.text.length);
+          widget.onExit();
           return KeyEventResult.handled;
         }
+        _emojiController.text += "\n";
 
         widget.state.onEmojiSelected(
           EmojiCategory.SEARCH,
@@ -139,14 +138,10 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
           widget.onExit();
           return KeyEventResult.ignored;
         }
-        _deleteLastCharacters(1);
+
         _emojiController.text = _emojiController.text
             .substring(0, _emojiController.text.length - 1);
-        if (_emojiController.text.isEmpty) {
-          widget.onExit();
-          return KeyEventResult.handled;
-        }
-
+        _deleteLastCharacters(1);
         _searchEmoji();
         return KeyEventResult.handled;
 
@@ -160,10 +155,8 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
   }
 
   void _searchEmoji() {
-    final String query = _emojiController.text
-        .substring(1, _emojiController.text.length)
-        .toLowerCase()
-        .replaceAll(" ", "_");
+    final String query =
+        _emojiController.text.toLowerCase().replaceAll(" ", "_");
 
     int emojiCategoryIndex = 0;
     int remainingSpace = resultsFilterCount;
