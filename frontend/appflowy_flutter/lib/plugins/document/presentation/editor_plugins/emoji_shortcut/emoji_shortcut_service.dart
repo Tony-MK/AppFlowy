@@ -2,7 +2,6 @@ import 'package:appflowy/workspace/presentation/settings/widgets/emoji_picker/sr
 import 'package:appflowy/workspace/presentation/settings/widgets/emoji_picker/src/emoji_picker.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/emoji_shortcut/emoji_shortcut_builder.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
-import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 
 const double menuWidth = 300.0;
