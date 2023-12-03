@@ -8,12 +8,13 @@ import 'package:appflowy/workspace/presentation/settings/widgets/emoji_picker/sr
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flowy_infra/size.dart';
 import 'package:flowy_infra_ui/style_widget/scrolling/styled_scroll_bar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 const int emojiNumberPerRow = 8;
 const double emojiSizeMax = 40;
-const resultsFilterCount = 35;
+const resultsFilterCount = 1;
 
 const Color selectedItemColor = Color(0xFFE0F8FF);
 
@@ -42,10 +43,11 @@ class EmojiShortcutPickerView extends EmojiPickerBuilder {
 
 class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
     with TickerProviderStateMixin {
-  final TextEditingController _emojiController = TextEditingController();
-  final FocusNode _emojiFocusNode = FocusNode();
   final EmojiCategoryGroup searchEmojiList =
       EmojiCategoryGroup(EmojiCategory.SEARCH, <Emoji>[]);
+  final TextEditingController _emojiController = TextEditingController();
+  final FocusNode _emojiFocusNode = FocusNode();
+
   final _focusNode = FocusNode(debugLabel: 'popup_list_widget');
 
   PageController? _pageController;
@@ -54,10 +56,8 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
 
   bool get isEmojiSearching =>
       searchEmojiList.emoji.isNotEmpty || _emojiController.text.isNotEmpty;
-
   @override
   void initState() {
-    super.initState();
     var initCategory = widget.state.emojiCategoryGroupList.indexWhere(
       (element) => element.category == widget.config.initCategory,
     );
@@ -71,18 +71,15 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
     );
     _pageController = PageController(initialPage: initCategory);
     _emojiFocusNode.requestFocus();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
-    });
+    super.initState();
   }
 
   @override
   void dispose() {
     _emojiController.dispose();
     _emojiFocusNode.dispose();
-    _pageController!.dispose();
-    _tabController!.dispose();
+    _pageController?.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
@@ -122,27 +119,34 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
         return KeyEventResult.ignored;
 
       case LogicalKeyboardKey.enter:
-        if (showingItems.isNotEmpty) {
-          if (_emojiController.text.isNotEmpty) {
-            _deleteLastCharacters(_emojiController.text.length);
+        if (showingItems.isEmpty) {
+          if (_emojiController.text.isEmpty) {
+            widget.onExit();
+            return KeyEventResult.ignored;
           }
-          widget.state.onEmojiSelected(
-            EmojiCategory.SEARCH,
-            showingItems[_selectedIndex],
-          );
+          _deleteLastCharacters(_emojiController.text.length);
+          return KeyEventResult.handled;
         }
 
-        widget.onExit();
+        widget.state.onEmojiSelected(
+          EmojiCategory.SEARCH,
+          showingItems[_selectedIndex],
+        );
         return KeyEventResult.handled;
 
       case LogicalKeyboardKey.backspace:
+        if (_emojiController.text.isEmpty) {
+          widget.onExit();
+          return KeyEventResult.ignored;
+        }
         _deleteLastCharacters(1);
+        _emojiController.text = _emojiController.text
+            .substring(0, _emojiController.text.length - 1);
         if (_emojiController.text.isEmpty) {
           widget.onExit();
           return KeyEventResult.handled;
         }
-        _emojiController.text = _emojiController.text
-            .substring(0, _emojiController.text.length - 1);
+
         _searchEmoji();
         return KeyEventResult.handled;
 
@@ -156,20 +160,27 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
   }
 
   void _searchEmoji() {
-    final String query = _emojiController.text.toLowerCase();
+    final String query = _emojiController.text
+        .substring(1, _emojiController.text.length)
+        .toLowerCase()
+        .replaceAll(" ", "_");
+
+    int emojiCategoryIndex = 0;
+    int remainingSpace = resultsFilterCount;
+
     searchEmojiList.emoji.clear();
-    for (var i = 0; i < widget.state.emojiCategoryGroupList.length; i++) {
-      searchEmojiList.emoji.addAll(
-        widget.state.emojiCategoryGroupList[i].emoji
-            .where((item) {
-              return item.name
-                  .toLowerCase()
-                  .replaceAll(" ", "_")
-                  .contains(query);
-            })
-            .toList()
-            .take(resultsFilterCount),
-      );
+
+    while (remainingSpace > 0 &&
+        emojiCategoryIndex < widget.state.emojiCategoryGroupList.length) {
+      final emojis = (query.isEmpty
+              ? widget.state.emojiCategoryGroupList[emojiCategoryIndex].emoji
+              : widget.state.emojiCategoryGroupList[emojiCategoryIndex].emoji
+                  .where((item) => item.name.toLowerCase().contains(query)))
+          .toList()
+          .take(remainingSpace);
+      searchEmojiList.emoji.addAll(emojis);
+      remainingSpace -= emojis.length;
+      emojiCategoryIndex++;
     }
 
     setState(() {});
@@ -262,6 +273,8 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
     return _buildButtonWidget(
       onPressed: () {
         widget.state.onEmojiSelected(categoryEmoji.category, emoji);
+        widget.onExit();
+        _deleteLastCharacters(1);
       },
       child: Container(
         decoration: BoxDecoration(

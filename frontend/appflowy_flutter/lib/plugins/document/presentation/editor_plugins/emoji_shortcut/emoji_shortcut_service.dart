@@ -29,50 +29,28 @@ CharacterShortcutEvent emojiShortcutCommand(
     key: 'show emoji selection menu',
     character: character,
     handler: (editorState) async {
-      showEmojiShortcutPicker(
+      opensEmojiShortcutPicker(
         editorState,
         context,
-        shouldInsertKeyword,
       );
       return true;
     },
   );
 }
 
-void showEmojiShortcutPicker(
+void opensEmojiShortcutPicker(
   EditorState editorState,
   BuildContext context,
-  bool shouldInsertCharacter,
 ) async {
-  final container = Overlay.of(context);
-  late OverlayEntry emojiShortcutPickerMenuEntry;
-
-  final selectionService = editorState.service.selectionService;
-  final selectionRects = selectionService.selectionRects;
-  if (selectionRects.isEmpty) {
-    return;
-  } else if (shouldInsertCharacter) {
-    // Have no idea why the focus will lose after inserting on web.
-    if (foundation.kIsWeb) {
-      keepEditorFocusNotifier.increase();
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => keepEditorFocusNotifier.decrease(),
-      );
-    }
-    await editorState.insertTextAtPosition(
-      ':',
-      position: editorState.selection!.start,
-    );
-  }
-
-  keepEditorFocusNotifier.increase();
+  final selectionRects = editorState.service.selectionService.selectionRects;
+  if (selectionRects.isEmpty) return;
 
   final editorHeight = editorState.renderBox!.size.height;
   final editorWidth = editorState.renderBox!.size.width;
   final editorOffset =
       editorState.renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
 
-  // Cursor location
+  // Cursor postion
   final cursor = selectionRects.first;
 
   // Check if emoji menu is will overflow on right side of editor
@@ -88,6 +66,9 @@ void showEmojiShortcutPicker(
     dy = cursor.topLeft.dy - menuOffset.dy - menuHeight;
   }
 
+  keepEditorFocusNotifier.increase();
+
+  late OverlayEntry emojiShortcutPickerMenuEntry;
   emojiShortcutPickerMenuEntry = FullScreenOverlayEntry(
     top: dy,
     right: dxOverflow ? 0 : null,
@@ -101,9 +82,12 @@ void showEmojiShortcutPicker(
         child: EmojiPicker(
           config: config,
           customWidget: (config, state) {
-            return EmojiShortcutPickerView(config, state, editorState, () {
-              emojiShortcutPickerMenuEntry.remove;
-            });
+            return EmojiShortcutPickerView(
+              config,
+              state,
+              editorState,
+              emojiShortcutPickerMenuEntry.remove,
+            );
           },
           onEmojiSelected: (category, emoji) {
             editorState.insertTextAtCurrentSelection(emoji.emoji);
@@ -112,5 +96,5 @@ void showEmojiShortcutPicker(
       ),
     ),
   ).build();
-  container.insert(emojiShortcutPickerMenuEntry);
+  Overlay.of(context).insert(emojiShortcutPickerMenuEntry);
 }
