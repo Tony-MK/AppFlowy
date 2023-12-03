@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:appflowy/plugins/document/presentation/editor_plugins/emoji_shortcut/emoji_shortcut_builder.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder2/protobuf.dart';
 import 'package:flutter/services.dart';
@@ -21,7 +19,7 @@ void main() {
 
   group('emoji shortcut in document', () {
     testWidgets('insert gringing emoji', (tester) async {
-      const int waitDuration = 5000;
+      const int waitDuration = 2000;
       const String expected = "😃";
       const String emoji = 'smile';
       const List<LogicalKeyboardKey> emojiKeys = [
@@ -53,10 +51,9 @@ void main() {
       await tester.wait(waitDuration);
 
       // Press ':' to open the menu
-      await tester.simulateKeyEvent(
-        LogicalKeyboardKey.semicolon, // Mac US keyboard format input for ":":
-        isShiftPressed: true, // depends on computer
-      );
+      await FlowyTestKeyboard.simulateKeyDownEvent(
+          tester: tester,
+          [LogicalKeyboardKey.shift, LogicalKeyboardKey.semicolon]);
 
       await tester.wait(waitDuration);
 
