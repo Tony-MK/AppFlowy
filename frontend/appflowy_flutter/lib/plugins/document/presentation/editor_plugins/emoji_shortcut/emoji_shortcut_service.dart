@@ -31,6 +31,7 @@ CharacterShortcutEvent emojiShortcutCommand(
     handler: (editorState) async {
       openEmojiShortcutPicker(
         shouldInsertCharacter,
+        Overlay.of(context),
         editorState,
         context,
       );
@@ -41,6 +42,7 @@ CharacterShortcutEvent emojiShortcutCommand(
 
 void openEmojiShortcutPicker(
   bool shouldInsertCharacter,
+  OverlayState container,
   EditorState editorState,
   BuildContext context,
 ) async {
@@ -105,12 +107,15 @@ void openEmojiShortcutPicker(
               emojiShortcutPickerMenuEntry.remove,
             );
           },
-          onEmojiSelected: (category, emoji) {
-            editorState.insertTextAtCurrentSelection(emoji.emoji);
+          onEmojiSelected: (category, emoji) async {
+            await editorState.insertTextAtCurrentSelection(emoji.emoji);
+            await editorState.deleteBackward();
+            await editorState.deleteBackward();
+            await editorState.insertTextAtCurrentSelection(emoji.emoji);
           },
         ),
       ),
     ),
   ).build();
-  Overlay.of(context).insert(emojiShortcutPickerMenuEntry);
+  container.insert(emojiShortcutPickerMenuEntry);
 }

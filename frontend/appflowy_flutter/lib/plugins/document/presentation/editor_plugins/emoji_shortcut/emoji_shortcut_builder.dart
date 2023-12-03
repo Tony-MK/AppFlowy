@@ -14,7 +14,7 @@ import 'package:flutter/services.dart';
 
 const int emojiNumberPerRow = 8;
 const double emojiSizeMax = 40;
-const resultsFilterCount = 1;
+const resultsFilterCount = 35;
 
 const Color selectedItemColor = Color(0xFFE0F8FF);
 
@@ -43,11 +43,10 @@ class EmojiShortcutPickerView extends EmojiPickerBuilder {
 
 class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
     with TickerProviderStateMixin {
-  final EmojiCategoryGroup searchEmojiList =
-      EmojiCategoryGroup(EmojiCategory.SEARCH, <Emoji>[]);
   final TextEditingController _emojiController = TextEditingController();
   final FocusNode _emojiFocusNode = FocusNode();
-
+  final EmojiCategoryGroup searchEmojiList =
+      EmojiCategoryGroup(EmojiCategory.SEARCH, <Emoji>[]);
   final _focusNode = FocusNode(debugLabel: 'popup_list_widget');
 
   PageController? _pageController;
@@ -56,8 +55,10 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
 
   bool get isEmojiSearching =>
       searchEmojiList.emoji.isNotEmpty || _emojiController.text.isNotEmpty;
+
   @override
   void initState() {
+    super.initState();
     var initCategory = widget.state.emojiCategoryGroupList.indexWhere(
       (element) => element.category == widget.config.initCategory,
     );
@@ -72,16 +73,18 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
     _pageController = PageController(initialPage: initCategory);
     _emojiFocusNode.requestFocus();
 
-    //widget.editorState.insertTextAtCurrentSelection(":");
-    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+      _searchEmoji();
+    });
   }
 
   @override
   void dispose() {
     _emojiController.dispose();
     _emojiFocusNode.dispose();
-    _pageController?.dispose();
-    _tabController?.dispose();
+    _pageController!.dispose();
+    _tabController!.dispose();
     super.dispose();
   }
 
@@ -114,34 +117,34 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
         return KeyEventResult.handled;
 
       case LogicalKeyboardKey.space || LogicalKeyboardKey.tab:
-        if (showingItems.isNotEmpty || _emojiController.text.isEmpty) {
-          return KeyEventResult.ignored;
-        }
-        widget.onExit();
-        return KeyEventResult.handled;
-
-      case LogicalKeyboardKey.enter:
-        if (showingItems.isEmpty) {
+        if (_emojiController.text.isEmpty || showingItems.isEmpty) {
           widget.onExit();
           return KeyEventResult.handled;
         }
-        _emojiController.text += "\n";
+        return KeyEventResult.ignored;
 
-        widget.state.onEmojiSelected(
-          EmojiCategory.SEARCH,
-          showingItems[_selectedIndex],
-        );
+      case LogicalKeyboardKey.enter:
+        if (showingItems.isNotEmpty) {
+          if (_emojiController.text.isNotEmpty) {
+            _deleteLastCharacters(_emojiController.text.length);
+          }
+          widget.state.onEmojiSelected(
+            EmojiCategory.SEARCH,
+            showingItems[_selectedIndex],
+          );
+        }
+
+        widget.onExit();
         return KeyEventResult.handled;
 
       case LogicalKeyboardKey.backspace:
+        _deleteLastCharacters(1);
         if (_emojiController.text.isEmpty) {
           widget.onExit();
-          return KeyEventResult.ignored;
+          return KeyEventResult.handled;
         }
-
         _emojiController.text = _emojiController.text
             .substring(0, _emojiController.text.length - 1);
-        _deleteLastCharacters(1);
         _searchEmoji();
         return KeyEventResult.handled;
 
@@ -159,20 +162,16 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
         _emojiController.text.toLowerCase().replaceAll(" ", "_");
 
     int emojiCategoryIndex = 0;
-    int remainingSpace = resultsFilterCount;
 
     searchEmojiList.emoji.clear();
 
-    while (remainingSpace > 0 &&
-        emojiCategoryIndex < widget.state.emojiCategoryGroupList.length) {
-      final emojis = (query.isEmpty
+    while (emojiCategoryIndex < widget.state.emojiCategoryGroupList.length) {
+      searchEmojiList.emoji.addAll((query.isEmpty
               ? widget.state.emojiCategoryGroupList[emojiCategoryIndex].emoji
               : widget.state.emojiCategoryGroupList[emojiCategoryIndex].emoji
                   .where((item) => item.name.toLowerCase().contains(query)))
           .toList()
-          .take(remainingSpace);
-      searchEmojiList.emoji.addAll(emojis);
-      remainingSpace -= emojis.length;
+          .take(resultsFilterCount));
       emojiCategoryIndex++;
     }
 
