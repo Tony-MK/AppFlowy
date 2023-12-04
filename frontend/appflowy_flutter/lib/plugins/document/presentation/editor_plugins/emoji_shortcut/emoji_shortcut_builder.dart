@@ -58,15 +58,15 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
 
   @override
   void initState() {
-    super.initState();
     var initCategory = widget.state.emojiCategoryGroupList.indexWhere(
       (element) => element.category == widget.config.initCategory,
     );
     if (initCategory == -1) {
       initCategory = 0;
     }
-    
-    while (widget.state.emojiCategoryGroupList[initCategory].emoji.isEmpty && initCategory < widget.state.emojiCategoryGroupList.length){
+
+    while (widget.state.emojiCategoryGroupList[initCategory].emoji.isEmpty &&
+        initCategory < widget.state.emojiCategoryGroupList.length) {
       initCategory++;
     }
     _tabController = TabController(
@@ -79,8 +79,10 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
-      _searchEmoji();
+      //_searchEmoji();
     });
+
+    super.initState();
   }
 
   @override
@@ -312,6 +314,7 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
       child: LayoutBuilder(
         builder: (context, constraints) {
           final emojiSize = widget.config.getEmojiSize(constraints.maxWidth);
+
           return Visibility(
             visible: _emojiController.text.isNotEmpty,
             child: Container(

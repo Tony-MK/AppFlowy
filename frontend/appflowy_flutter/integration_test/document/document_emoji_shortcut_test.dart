@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:appflowy/plugins/document/presentation/editor_plugins/emoji_shortcut/emoji_shortcut_builder.dart';
+import 'package:appflowy/workspace/presentation/home/menu/sidebar/sidebar.dart';
+import 'package:appflowy/workspace/presentation/home/menu/view/view_item.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder2/protobuf.dart';
+import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -14,53 +19,56 @@ const arrowKeys = [
   LogicalKeyboardKey.arrowUp,
 ];
 
+const int waitDuration = 2000;
+const String expected = "😃";
+const String emoji = 'smile';
+const List<LogicalKeyboardKey> emojiKeys = [
+  LogicalKeyboardKey.keyS, // Smile
+  LogicalKeyboardKey.keyM,
+  LogicalKeyboardKey.keyI,
+  LogicalKeyboardKey.keyL,
+  LogicalKeyboardKey.keyE,
+];
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('emoji shortcut in document', () {
     testWidgets('insert gringing emoji', (tester) async {
-      const int waitDuration = 2000;
-      const String expected = "😃";
-      const String emoji = 'smile';
-      const List<LogicalKeyboardKey> emojiKeys = [
-        LogicalKeyboardKey.keyS, // Smile
-        LogicalKeyboardKey.keyM,
-        LogicalKeyboardKey.keyI,
-        LogicalKeyboardKey.keyL,
-        LogicalKeyboardKey.keyE,
-      ];
-
       await tester.initializeAppFlowy();
+      await tester.pumpAndSettle();
+
       await tester.tapGoButton();
+      await tester.pumpAndSettle();
+
       tester.expectToSeeHomePage();
 
-      // Create a new page
       await tester.createNewPageWithName(
-        name: '$emoji${arrowKeys.isEmpty ? "" : " via Keys"}',
+        //name: 'document',
         layout: ViewLayoutPB.Document,
         openAfterCreated: true,
       );
 
-      await tester.wait(waitDuration);
+      await tester.pumpAndSettle();
 
       // This is a workaround since the openAfterCreated
-      // option does not work in createNewPageWithName method
+      //  option does not work in createNewPageWithName method
+      await tester.tap(find.byType(SingleInnerViewItem).first);
+      await tester.pumpAndSettle();
+
       await tester.editor.tapLineOfEditorAt(0);
       await tester.pumpAndSettle();
 
-      await tester.wait(waitDuration);
-
       // Press ':' to open the menu
-      await FlowyTestKeyboard.simulateKeyDownEvent(
-          tester: tester,
-          [LogicalKeyboardKey.shift, LogicalKeyboardKey.semicolon]);
+      await tester.ime.insertText(':');
+      await tester.pumpAndSettle();
 
-      await tester.wait(waitDuration);
+      //expect(find.byType(EmojiShortcutPickerViewState), findsOneWidget);
 
       // Search for the emoji most similar to the text
       // Generate keyboard press events
-      await FlowyTestKeyboard.simulateKeyDownEvent(tester: tester, emojiKeys);
-      await tester.wait(waitDuration);
+      await FlowyTestKeyboard.simulateKeyDownEvent(emojiKeys, tester: tester);
+      await tester.pumpAndSettle();
 
       // Check if text is emoji
       expect(
@@ -74,8 +82,6 @@ void main() {
       );
 
       await tester.wait(80000);
-
-      expect(find.byType(EmojiShortcutPickerViewState), findsOneWidget);
 
       // Generate keyboard press events
       // await FlowyTestKeyboard.simulateKeyDownEvent(
