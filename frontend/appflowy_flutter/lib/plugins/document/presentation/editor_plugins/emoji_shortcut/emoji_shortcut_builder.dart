@@ -6,11 +6,12 @@ import 'package:appflowy/workspace/presentation/settings/widgets/emoji_picker/sr
 import 'package:appflowy/workspace/presentation/settings/widgets/emoji_picker/src/models/emoji_model.dart';
 
 import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:collection/collection.dart';
 import 'package:flowy_infra/size.dart';
 import 'package:flowy_infra_ui/style_widget/scrolling/styled_scroll_bar.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 
 const int emojiNumberPerRow = 8;
 const double emojiSizeMax = 40;
@@ -159,40 +160,32 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
 
     searchEmojiList.emoji.clear();
 
-    searchEmojiList.emoji.addAll(widget.state.emojiCategoryGroupList[0].emoji
-        .where((item) => item.name.toLowerCase().contains(query)));
+    searchEmojiList.emoji.addAll(
+      widget.state.emojiCategoryGroupList[0].emoji.where(
+        (item) => query.isEmpty || item.name.toLowerCase().contains(query),
+      ),
+    );
 
     int remaingSpace = resultsFilterCount - searchEmojiList.emoji.length;
+    int emojiCategoryIndex = 0;
 
-    if (remaingSpace > 0) {
+    while (++emojiCategoryIndex < widget.state.emojiCategoryGroupList.length &&
+        remaingSpace > 0) {
       searchEmojiList.emoji.addAll(
-        widget.state.emojiCategoryGroupList[9].emoji
-            .where((item) => item.name.toLowerCase().contains(query))
-            .toList()
-            .take(remaingSpace),
+        widget.state.emojiCategoryGroupList[emojiCategoryIndex].emoji
+            .where(
+              (item) =>
+                  searchEmojiList.emoji.firstWhereOrNull(
+                          (sitem) => item.name == sitem.name) ==
+                      null &&
+                  (query.isEmpty || item.name.toLowerCase().contains(query)),
+            )
+            .take(remaingSpace ~/
+                (widget.state.emojiCategoryGroupList.length -
+                    emojiCategoryIndex)),
       );
-
       remaingSpace = resultsFilterCount - searchEmojiList.emoji.length;
-      int emojiCategoryIndex = widget.state.emojiCategoryGroupList.length - 2;
-      int categoryRatio = (remaingSpace / (emojiCategoryIndex)) as int;
-
-      while (emojiCategoryIndex > 0 && remaingSpace > 0) {
-        searchEmojiList.emoji.addAll(
-          widget.state.emojiCategoryGroupList[emojiCategoryIndex].emoji
-              .where(
-                (item) =>
-                    searchEmojiList.emoji.contains(item) &&
-                    (query.isEmpty || item.name.toLowerCase().contains(query)),
-              )
-              .take(categoryRatio),
-        );
-
-        emojiCategoryIndex--;
-        remaingSpace = resultsFilterCount - searchEmojiList.emoji.length;
-        categoryRatio = (remaingSpace / (emojiCategoryIndex)) as int;
-      }
     }
-
     setState(() {});
   }
 
