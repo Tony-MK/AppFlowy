@@ -102,11 +102,10 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
       final int newSelectedIndex =
           (_selectedIndex + arrowKeys[event.logicalKey]!)
               .clamp(0, searchEmojiList.emoji.length - 1);
-      if (_selectedIndex != newSelectedIndex) {
-        setState(() => _selectedIndex = newSelectedIndex);
-        return KeyEventResult.handled;
-      }
-      return KeyEventResult.ignored;
+
+      if (_selectedIndex == newSelectedIndex) return KeyEventResult.ignored;
+      setState(() => _selectedIndex = newSelectedIndex);
+      return KeyEventResult.handled;
     }
 
     switch (event.logicalKey) {
@@ -123,7 +122,8 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
       case LogicalKeyboardKey.enter:
         searchEmojiList.emoji.isEmpty
             ? widget.editorState.insertNewLine(
-                position: widget.editorState.selection as Position)
+                position: widget.editorState.selection as Position,
+              )
             : widget.state.onEmojiSelected(
                 EmojiCategory.SEARCH,
                 searchEmojiList.emoji[_selectedIndex],
@@ -177,12 +177,15 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
       int categoryRatio = (remaingSpace / (emojiCategoryIndex)) as int;
 
       while (emojiCategoryIndex > 0 && remaingSpace > 0) {
-        searchEmojiList.emoji.addAll(widget
-            .state.emojiCategoryGroupList[emojiCategoryIndex].emoji
-            .where((item) =>
-                searchEmojiList.emoji.contains(item) &&
-                (query.isEmpty || item.name.toLowerCase().contains(query)))
-            .take(categoryRatio));
+        searchEmojiList.emoji.addAll(
+          widget.state.emojiCategoryGroupList[emojiCategoryIndex].emoji
+              .where(
+                (item) =>
+                    searchEmojiList.emoji.contains(item) &&
+                    (query.isEmpty || item.name.toLowerCase().contains(query)),
+              )
+              .take(categoryRatio),
+        );
 
         emojiCategoryIndex--;
         remaingSpace = resultsFilterCount - searchEmojiList.emoji.length;
