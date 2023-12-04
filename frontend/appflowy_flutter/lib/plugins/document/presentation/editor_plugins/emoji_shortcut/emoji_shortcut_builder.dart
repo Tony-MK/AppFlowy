@@ -121,16 +121,43 @@ class EmojiShortcutPickerViewState extends State<EmojiShortcutPickerView>
         return KeyEventResult.handled;
 
       case LogicalKeyboardKey.enter:
-        searchEmojiList.emoji.isEmpty
-            ? widget.editorState.insertNewLine(
-                position: widget.editorState.selection as Position,
-              )
-            : widget.state.onEmojiSelected(
-                EmojiCategory.SEARCH,
-                searchEmojiList.emoji[_selectedIndex],
-              );
+        if (searchEmojiList.emoji.isEmpty) {
+          widget.editorState.insertNewLine(
+            position: widget.editorState.selection as Position,
+          );
+
+          widget.onExit();
+
+          return KeyEventResult.handled;
+        }
+        widget.state.onEmojiSelected(
+          EmojiCategory.SEARCH,
+          searchEmojiList.emoji[_selectedIndex],
+        );
 
         widget.onExit();
+
+        // Insert actual emoji
+        final selection = widget.editorState.selection;
+        if (selection == null || !selection.isCollapsed) {
+          return KeyEventResult.handled;
+        }
+        final node = widget.editorState.getNodeAtPath(selection.end.path);
+        final delta = node?.delta;
+        if (node == null || delta == null) {
+          return KeyEventResult.handled;
+        }
+
+        // widget.onSelectionUpdate();
+        widget.editorState.apply(
+          widget.editorState.transaction
+            ..deleteText(
+              node,
+              selection.start.offset - _emojiController.text.length,
+              _emojiController.text.length,
+            ),
+        );
+
         return KeyEventResult.handled;
 
       case LogicalKeyboardKey.backspace:

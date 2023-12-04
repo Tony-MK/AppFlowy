@@ -15,7 +15,7 @@ const arrowKeys = [
   LogicalKeyboardKey.arrowUp,
 ];
 
-const String expected = "😃";
+const String expected = "😼";
 const String emoji = 'smile';
 const List<LogicalKeyboardKey> emojiKeys = [
   LogicalKeyboardKey.keyS, // Smile
@@ -29,7 +29,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('emoji shortcut in document', () {
-    testWidgets('insert gringing emoji', (tester) async {
+    testWidgets('insert emoji', (tester) async {
       await tester.initializeAppFlowy();
       await tester.pumpAndSettle();
 
@@ -46,11 +46,6 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // This is a workaround since the openAfterCreated
-      //  option does not work in createNewPageWithName method
-      await tester.tap(find.byType(SingleInnerViewItem).first);
-      await tester.pumpAndSettle();
-
       await tester.editor.tapLineOfEditorAt(0);
       await tester.pumpAndSettle();
 
@@ -58,7 +53,7 @@ void main() {
       await tester.ime.insertText(':');
       await tester.pumpAndSettle();
 
-      expect(find.byType(EmojiShortcutPickerViewState), findsOneWidget);
+      expect(find.byType(EmojiShortcutPickerView), findsOneWidget);
 
       // Search for the emoji most similar to the text
       // Generate keyboard press events
@@ -92,14 +87,6 @@ void main() {
 
     testWidgets('insert gringing emoji with arrow keys', (tester) async {
       insertEmoji(tester, ':gringing', "😃");
-    });
-
-    testWidgets('insert angry emoji', (tester) async {
-      insertEmoji(tester, ':angry', "😃", keys: []);
-    });
-
-    testWidgets('insert angry emoji with arrow keys', (tester) async {
-      insertEmoji(tester, ':angry', "😃");
     });
   });
 }

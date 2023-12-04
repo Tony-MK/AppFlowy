@@ -106,7 +106,6 @@ void openEmojiShortcutPicker(
             );
           },
           onEmojiSelected: (_, emoji) async {
-            // Delete : character
             await editorState.deleteBackward();
 
             // Insert actual emoji
