@@ -2,7 +2,6 @@ import 'package:appflowy/workspace/presentation/settings/widgets/emoji_picker/sr
 import 'package:appflowy/workspace/presentation/settings/widgets/emoji_picker/src/emoji_picker.dart';
 import 'package:appflowy/plugins/document/presentation/editor_plugins/emoji_shortcut/emoji_shortcut_builder.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
-import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 
 const double menuWidth = 300.0;
@@ -14,8 +13,8 @@ const EmojiPickerConfig config = EmojiPickerConfig(
   emojiSizeMax: emojiSizeMax,
   bgColor: Colors.transparent,
   categoryIconColor: Colors.grey,
-  selectedCategoryIconColor: Color(0xff333333),
-  progressIndicatorColor: Color(0xff333333),
+  //selectedCategoryIconColor: Color(0xff333333),
+  //progressIndicatorColor: Color(0xff333333),
   buttonMode: ButtonMode.CUPERTINO,
   initCategory: EmojiCategory.RECENT,
 );
@@ -50,6 +49,7 @@ void openEmojiShortcutPicker(
   if (selectionRects.isEmpty) {
     return;
   } else if (shouldInsertCharacter) {
+    /*
     // Have no idea why the focus will lose after inserting on web.
     if (foundation.kIsWeb) {
       keepEditorFocusNotifier.increase();
@@ -57,10 +57,8 @@ void openEmojiShortcutPicker(
         (_) => keepEditorFocusNotifier.decrease(),
       );
     }
-    await editorState.insertTextAtPosition(
-      ':',
-      position: editorState.selection!.start,
-    );
+    */
+    await editorState.insertTextAtCurrentSelection(':');
   }
 
   final editorHeight = editorState.renderBox!.size.height;
@@ -107,10 +105,11 @@ void openEmojiShortcutPicker(
               emojiShortcutPickerMenuEntry.remove,
             );
           },
-          onEmojiSelected: (category, emoji) async {
-            await editorState.insertTextAtCurrentSelection(emoji.emoji);
+          onEmojiSelected: (_, emoji) async {
+            // Delete : character
             await editorState.deleteBackward();
-            await editorState.deleteBackward();
+
+            // Insert actual emoji
             await editorState.insertTextAtCurrentSelection(emoji.emoji);
           },
         ),

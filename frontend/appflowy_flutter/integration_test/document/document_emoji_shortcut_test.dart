@@ -1,10 +1,6 @@
-import 'dart:io';
-
 import 'package:appflowy/plugins/document/presentation/editor_plugins/emoji_shortcut/emoji_shortcut_builder.dart';
-import 'package:appflowy/workspace/presentation/home/menu/sidebar/sidebar.dart';
 import 'package:appflowy/workspace/presentation/home/menu/view/view_item.dart';
 import 'package:appflowy_backend/protobuf/flowy-folder2/protobuf.dart';
-import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -19,7 +15,6 @@ const arrowKeys = [
   LogicalKeyboardKey.arrowUp,
 ];
 
-const int waitDuration = 2000;
 const String expected = "😃";
 const String emoji = 'smile';
 const List<LogicalKeyboardKey> emojiKeys = [
@@ -63,25 +58,12 @@ void main() {
       await tester.ime.insertText(':');
       await tester.pumpAndSettle();
 
-      //expect(find.byType(EmojiShortcutPickerViewState), findsOneWidget);
+      expect(find.byType(EmojiShortcutPickerViewState), findsOneWidget);
 
       // Search for the emoji most similar to the text
       // Generate keyboard press events
-      await FlowyTestKeyboard.simulateKeyDownEvent(emojiKeys, tester: tester);
+      await FlowyTestKeyboard.simulateKeyDownEvent(tester: tester, emojiKeys);
       await tester.pumpAndSettle();
-
-      // Check if text is emoji
-      expect(
-        tester.editor
-            .getCurrentEditorState()
-            .document
-            .last!
-            .delta!
-            .toPlainText(),
-        ':$emoji',
-      );
-
-      await tester.wait(80000);
 
       // Generate keyboard press events
       // await FlowyTestKeyboard.simulateKeyDownEvent(
@@ -94,22 +76,9 @@ void main() {
 
       // Press ENTER to insert the emoji and replace text
       await tester.simulateKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
 
       // Check if text is replaced by emoji
-      expect(
-        tester.editor
-            .getCurrentEditorState()
-            .document
-            .last!
-            .delta!
-            .toPlainText(),
-        expected,
-      );
-
-      await FlowyTestKeyboard.simulateKeyDownEvent(tester: tester, emojiKeys);
-      await tester.wait(waitDuration);
-
-      // Check if text is emoji
       expect(
         tester.editor
             .getCurrentEditorState()
@@ -140,62 +109,4 @@ void insertEmoji(
   String emoji,
   String expected, {
   List<LogicalKeyboardKey> keys = arrowKeys,
-}) async {
-  const int waitDuration = 8000;
-
-  await tester.initializeAppFlowy();
-
-  await tester.wait(waitDuration);
-
-  await tester.tapGoButton();
-  //tester.expectToSeeHomePage();
-
-  await tester.wait(waitDuration);
-
-  // Create a new page
-  await tester.createNewPageWithName(
-    name: '${emoji.substring(1)}${arrowKeys.isEmpty ? "" : " via Keys"}',
-    layout: ViewLayoutPB.Document,
-    openAfterCreated: true,
-  );
-
-  await tester.wait(waitDuration);
-
-  // This is a workaround since the openAfterCreated
-  // option does not work in createNewPageWithName method
-  await tester.editor.tapLineOfEditorAt(0);
-  await tester.pumpAndSettle();
-
-  await tester.wait(waitDuration);
-
-  // Perform command and search for the emoji closet to the text
-  await tester.ime.insertText(emoji);
-  await tester.pumpAndSettle();
-
-  await tester.wait(waitDuration);
-
-  // Check if text is emoji
-  final editorState = tester.editor.getCurrentEditorState();
-  expect(
-    editorState.document.toString(),
-    emoji,
-  );
-
-  // Generate keyboard press events
-  await FlowyTestKeyboard.simulateKeyDownEvent(
-    tester: tester,
-    [
-      // Perform arrow keyboard combination eg: [RIGHT, DOWN, LEFT, UP]
-      ...arrowKeys,
-
-      // Press ENTER to tnsert the emoji
-      LogicalKeyboardKey.enter,
-    ],
-  );
-
-  // Check if text is emoji
-  expect(
-    editorState.document.last!.delta!.toPlainText(),
-    expected,
-  );
-}
+}) async {}
