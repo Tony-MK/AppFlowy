@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 const double menuWidth = 300.0;
 const double menuHeight = 200.0;
 const Offset menuOffset = Offset(0, 8.0);
+const String shortcutCharacter = ':';
 
 const EmojiPickerConfig config = EmojiPickerConfig(
   emojiNumberPerRow: emojiNumberPerRow,
@@ -15,7 +16,7 @@ const EmojiPickerConfig config = EmojiPickerConfig(
   categoryIconColor: Colors.grey,
   //selectedCategoryIconColor: Color(0xff333333),
   //progressIndicatorColor: Color(0xff333333),
-  buttonMode: ButtonMode.CUPERTINO,
+  buttonMode: ButtonMode.MATERIAL,
   initCategory: EmojiCategory.RECENT,
 );
 
@@ -29,7 +30,6 @@ CharacterShortcutEvent emojiShortcutCommand(
     character: character,
     handler: (editorState) async {
       openEmojiShortcutPicker(
-        shouldInsertCharacter,
         Overlay.of(context),
         editorState,
         context,
@@ -40,26 +40,24 @@ CharacterShortcutEvent emojiShortcutCommand(
 }
 
 void openEmojiShortcutPicker(
-  bool shouldInsertCharacter,
   OverlayState container,
   EditorState editorState,
   BuildContext context,
 ) async {
   final selectionRects = editorState.service.selectionService.selectionRects;
-  if (selectionRects.isEmpty) {
-    return;
-  } else if (shouldInsertCharacter) {
-    /*
-    // Have no idea why the focus will lose after inserting on web.
-    if (foundation.kIsWeb) {
-      keepEditorFocusNotifier.increase();
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => keepEditorFocusNotifier.decrease(),
-      );
-    }
-    */
-    await editorState.insertTextAtCurrentSelection(':');
+  if (selectionRects.isEmpty) return;
+
+  /*
+  // Have no idea why the focus will lose after inserting on web.
+  if (foundation.kIsWeb) {
+    keepEditorFocusNotifier.increase();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => keepEditorFocusNotifier.decrease(),
+    );
   }
+  */
+
+  await editorState.insertTextAtCurrentSelection(':');
 
   final editorHeight = editorState.renderBox!.size.height;
   final editorWidth = editorState.renderBox!.size.width;
@@ -84,8 +82,8 @@ void openEmojiShortcutPicker(
 
   keepEditorFocusNotifier.increase();
 
-  late OverlayEntry emojiShortcutPickerMenuEntry;
-  emojiShortcutPickerMenuEntry = FullScreenOverlayEntry(
+  late OverlayEntry overlayEntry;
+  overlayEntry = FullScreenOverlayEntry(
     top: dy,
     right: dxOverflow ? 0 : null,
     left: dxOverflow ? null : cursor.bottomLeft.dx,
@@ -97,12 +95,12 @@ void openEmojiShortcutPicker(
         padding: const EdgeInsets.all(4.0),
         child: EmojiPicker(
           config: config,
-          customWidget: (config, state) {
+          customWidget: (config, emojiState) {
             return EmojiShortcutPickerView(
               config,
-              state,
+              emojiState,
               editorState,
-              emojiShortcutPickerMenuEntry.remove,
+              overlayEntry.remove,
             );
           },
           onEmojiSelected: (_, emoji) async {
@@ -115,5 +113,5 @@ void openEmojiShortcutPicker(
       ),
     ),
   ).build();
-  container.insert(emojiShortcutPickerMenuEntry);
+  container.insert(overlayEntry);
 }
