@@ -87,7 +87,7 @@ void openEmojiShortcutPicker(
     top: dy,
     right: dxOverflow ? 0 : null,
     left: dxOverflow ? null : cursor.bottomLeft.dx,
-    dismissCallback: () => keepEditorFocusNotifier.decrease(),
+    dismissCallback: keepEditorFocusNotifier.decrease,
     builder: (context) => Material(
       child: Container(
         width: menuWidth,
