@@ -1,4 +1,5 @@
 import 'package:appflowy/generated/flowy_svgs.g.dart';
+import 'package:appflowy/plugins/document/presentation/more/cubit/document_appearance_cubit.dart';
 import 'package:appflowy/plugins/trash/application/trash_service.dart';
 import 'package:appflowy/startup/startup.dart';
 import 'package:appflowy/workspace/application/tabs/tabs_bloc.dart';
@@ -21,11 +22,9 @@ class MentionPageBlock extends StatefulWidget {
   const MentionPageBlock({
     super.key,
     required this.pageId,
-    required this.textStyle,
   });
 
   final String pageId;
-  final TextStyle? textStyle;
 
   @override
   State<MentionPageBlock> createState() => _MentionPageBlockState();
@@ -60,6 +59,7 @@ class _MentionPageBlockState extends State<MentionPageBlock> {
 
   @override
   Widget build(BuildContext context) {
+    final fontSize = context.read<DocumentAppearanceCubit>().state.fontSize;
     return FutureBuilder<ViewPB?>(
       initialData: pageMemorizer[widget.pageId],
       future: viewPBFuture,
@@ -71,7 +71,6 @@ class _MentionPageBlockState extends State<MentionPageBlock> {
           return const SizedBox.shrink();
         }
         updateSelection();
-        final iconSize = widget.textStyle?.fontSize ?? 16.0;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
           child: FlowyHover(
@@ -85,14 +84,13 @@ class _MentionPageBlockState extends State<MentionPageBlock> {
                   const HSpace(4),
                   FlowySvg(
                     view.layout.icon,
-                    size: Size.square(iconSize + 2.0),
+                    size: const Size.square(18.0),
                   ),
                   const HSpace(2),
                   FlowyText(
                     view.name,
                     decoration: TextDecoration.underline,
-                    fontSize: widget.textStyle?.fontSize,
-                    fontWeight: widget.textStyle?.fontWeight,
+                    fontSize: fontSize,
                   ),
                   const HSpace(2),
                 ],

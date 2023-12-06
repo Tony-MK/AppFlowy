@@ -147,7 +147,7 @@ fn default_field(field_str: String, is_primary: bool) -> Field {
   Field::new(
     gen_field_id(),
     field_str,
-    field_type.into(),
+    field_type.clone().into(),
     is_primary,
   )
   .with_type_option_data(field_type, type_option_data)

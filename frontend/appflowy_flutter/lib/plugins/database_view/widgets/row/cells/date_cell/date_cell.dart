@@ -85,11 +85,7 @@ class _DateCellState extends GridCellState<GridDateCell> {
               child: Container(
                 alignment: alignment,
                 padding: padding,
-                child: FlowyText.medium(
-                  text,
-                  color: color,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: FlowyText.medium(text, color: color),
               ),
               popupBuilder: (BuildContext popoverContent) {
                 return DateCellEditor(
@@ -140,12 +136,9 @@ class _DateCellState extends GridCellState<GridDateCell> {
                       ),
                     ),
                     const HSpace(6),
-                    RotatedBox(
+                    const RotatedBox(
                       quarterTurns: 3,
-                      child: Icon(
-                        Icons.chevron_left,
-                        color: Theme.of(context).hintColor,
-                      ),
+                      child: Icon(Icons.chevron_left),
                     ),
                     const HSpace(2),
                   ],
@@ -154,19 +147,15 @@ class _DateCellState extends GridCellState<GridDateCell> {
             );
           } else {
             return FlowyButton(
-              radius: BorderRadius.zero,
-              hoverColor: Colors.transparent,
               text: Container(
                 alignment: alignment,
                 padding: padding,
-                child: FlowyText(text, color: color, fontSize: 15),
+                child: FlowyText.medium(text, color: color),
               ),
               onTap: () {
                 showMobileBottomSheet(
                   context,
                   padding: EdgeInsets.zero,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.secondaryContainer,
                   builder: (context) {
                     return MobileDateCellEditScreen(
                       controller: widget.cellControllerBuilder.build()

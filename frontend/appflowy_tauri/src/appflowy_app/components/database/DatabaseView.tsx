@@ -6,7 +6,8 @@ import { Board } from './board';
 import { Calendar } from './calendar';
 
 export const DatabaseView: FC<{
-  onEditRecord: (rowId: string) => void;
+  tableHeight: number;
+  isActivated: boolean;
 }> = (props) => {
   const { layoutType } = useDatabase();
 

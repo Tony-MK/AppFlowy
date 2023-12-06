@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:appflowy/generated/locale_keys.g.dart';
+import 'package:flutter/services.dart';
 import 'package:textfield_tags/textfield_tags.dart';
 
 import 'extension.dart';
@@ -16,16 +17,15 @@ class SelectOptionTextField extends StatefulWidget {
   final LinkedHashMap<String, SelectOptionPB> selectedOptionMap;
   final double distanceToText;
   final List<String> textSeparators;
-  final TextEditingController? textController;
 
   final Function(String) onSubmitted;
   final Function(String) newText;
   final Function(List<String>, String) onPaste;
   final Function(String) onRemove;
   final VoidCallback? onClick;
+  final int? maxLength;
 
   const SelectOptionTextField({
-    super.key,
     required this.options,
     required this.selectedOptionMap,
     required this.distanceToText,
@@ -35,25 +35,38 @@ class SelectOptionTextField extends StatefulWidget {
     required this.onRemove,
     required this.newText,
     required this.textSeparators,
-    this.textController,
     this.onClick,
-  });
+    this.maxLength,
+    TextEditingController? textController,
+    FocusNode? focusNode,
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<SelectOptionTextField> createState() => _SelectOptionTextFieldState();
 }
 
 class _SelectOptionTextFieldState extends State<SelectOptionTextField> {
-  final FocusNode focusNode = FocusNode();
-  late final TextEditingController controller;
+  late FocusNode focusNode;
+  late TextEditingController controller;
 
   @override
   void initState() {
-    super.initState();
-    controller = widget.textController ?? TextEditingController();
+    focusNode = FocusNode();
+    controller = TextEditingController();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       focusNode.requestFocus();
     });
+    super.initState();
+  }
+
+  String? _suffixText() {
+    if (widget.maxLength != null) {
+      return ' ${controller.text.length}/${widget.maxLength}';
+    } else {
+      return null;
+    }
   }
 
   @override
@@ -94,6 +107,9 @@ class _SelectOptionTextFieldState extends State<SelectOptionTextField> {
               }
             },
             maxLines: 1,
+            maxLength: widget.maxLength,
+            maxLengthEnforcement:
+                MaxLengthEnforcement.truncateAfterCompositionEnds,
             style: Theme.of(context).textTheme.bodyMedium,
             decoration: InputDecoration(
               enabledBorder: OutlineInputBorder(
@@ -110,6 +126,8 @@ class _SelectOptionTextFieldState extends State<SelectOptionTextField> {
                   .textTheme
                   .bodySmall!
                   .copyWith(color: Theme.of(context).hintColor),
+              suffixText: _suffixText(),
+              counterText: "",
               prefixIconConstraints:
                   BoxConstraints(maxWidth: widget.distanceToText),
               focusedBorder: OutlineInputBorder(

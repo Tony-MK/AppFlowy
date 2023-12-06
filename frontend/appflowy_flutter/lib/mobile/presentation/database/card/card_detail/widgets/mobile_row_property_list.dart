@@ -36,7 +36,6 @@ class MobileRowPropertyList extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: visibleCells.length,
-          padding: EdgeInsets.zero,
           itemBuilder: (context, index) => _PropertyCell(
             key: ValueKey('row_detail_${visibleCells[index].fieldId}'),
             cellContext: visibleCells[index],
@@ -129,8 +128,8 @@ GridCellStyle? _customCellStyle(FieldType fieldType) {
     case FieldType.Checklist:
       return ChecklistCellStyle(
         placeholder: LocaleKeys.grid_row_textPlaceholder.tr(),
-        cellPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-        useRoundedBorders: true,
+        cellPadding: EdgeInsets.zero,
+        showTasksInline: true,
       );
     case FieldType.Number:
       return GridNumberCellStyle(

@@ -230,11 +230,9 @@ class _DocumentHeaderToolbarState extends State<DocumentHeaderToolbar> {
       alignment: Alignment.bottomLeft,
       width: double.infinity,
       padding: PlatformExtension.isDesktopOrWeb
-          ? EdgeInsets.symmetric(
-              horizontal: EditorStyleCustomizer.documentPadding.right,
-            )
+          ? EditorStyleCustomizer.documentPadding
           : EdgeInsets.symmetric(
-              horizontal: EditorStyleCustomizer.documentPadding.left,
+              horizontal: EditorStyleCustomizer.documentPadding.left - 6.0,
             ),
       child: SizedBox(
         height: 28,
@@ -278,7 +276,7 @@ class _DocumentHeaderToolbarState extends State<DocumentHeaderToolbar> {
           ),
           useIntrinsicWidth: true,
           leftIcon: const FlowySvg(FlowySvgs.image_s),
-          text: FlowyText.small(
+          text: FlowyText.regular(
             LocaleKeys.document_plugins_cover_addCover.tr(),
           ),
         ),
@@ -295,7 +293,7 @@ class _DocumentHeaderToolbarState extends State<DocumentHeaderToolbar> {
             Icons.emoji_emotions_outlined,
             size: 18,
           ),
-          text: FlowyText.small(
+          text: FlowyText.regular(
             LocaleKeys.document_plugins_cover_removeIcon.tr(),
           ),
         ),
@@ -308,7 +306,7 @@ class _DocumentHeaderToolbarState extends State<DocumentHeaderToolbar> {
           Icons.emoji_emotions_outlined,
           size: 18,
         ),
-        text: FlowyText.small(
+        text: FlowyText.regular(
           LocaleKeys.document_plugins_cover_addIcon.tr(),
         ),
         onTap: PlatformExtension.isDesktop
@@ -470,10 +468,7 @@ class DocumentCoverState extends State<DocumentCover> {
                         },
                       );
                     },
-                    fillColor: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withOpacity(0.5),
+                    fillColor: Theme.of(context).colorScheme.onSurfaceVariant,
                     height: 32,
                     title: LocaleKeys.document_plugins_cover_changeCover.tr(),
                   ),
@@ -592,7 +587,7 @@ class DeleteCoverButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final fillColor = PlatformExtension.isDesktopOrWeb
         ? Theme.of(context).colorScheme.surface.withOpacity(0.5)
-        : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5);
+        : Theme.of(context).colorScheme.onSurfaceVariant;
     final svgColor = PlatformExtension.isDesktopOrWeb
         ? Theme.of(context).colorScheme.tertiary
         : Theme.of(context).colorScheme.onPrimary;

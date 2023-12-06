@@ -3,7 +3,6 @@ import 'package:appflowy/mobile/presentation/database/card/card_detail/cells/num
 import 'package:appflowy/mobile/presentation/database/card/card_detail/cells/text_cell.dart';
 import 'package:appflowy/mobile/presentation/database/card/card_detail/cells/url_cell.dart';
 import 'package:appflowy/mobile/presentation/database/card/row/cells/cells.dart';
-import 'package:appflowy/mobile/presentation/database/card/row/cells/mobile_checklist_cell.dart';
 import 'package:appflowy/plugins/database_view/application/cell/cell_controller_builder.dart';
 import 'package:appflowy/util/platform_extension.dart';
 import 'package:appflowy_backend/protobuf/flowy-database2/field_entities.pb.dart';
@@ -183,7 +182,7 @@ class GridCellBuilder {
           key: key,
         );
       case FieldType.Checklist:
-        return MobileChecklistCell(
+        return GridChecklistCell(
           cellControllerBuilder: cellControllerBuilder,
           style: style,
           key: key,
@@ -262,7 +261,7 @@ class MobileRowDetailPageCellBuilder {
           key: key,
         );
       case FieldType.Checklist:
-        return MobileChecklistCell(
+        return GridChecklistCell(
           cellControllerBuilder: cellControllerBuilder,
           style: style,
           key: key,

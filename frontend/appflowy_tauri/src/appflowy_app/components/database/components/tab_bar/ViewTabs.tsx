@@ -1,5 +1,4 @@
 import { styled, Tab, TabProps, Tabs } from '@mui/material';
-import { HTMLAttributes } from 'react';
 
 export const ViewTabs = styled(Tabs)({
   minHeight: '28px',
@@ -21,7 +20,7 @@ export const ViewTab = styled((props: TabProps) => <Tab disableRipple {...props}
   },
 });
 
-interface TabPanelProps extends HTMLAttributes<HTMLDivElement> {
+interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
@@ -30,18 +29,16 @@ interface TabPanelProps extends HTMLAttributes<HTMLDivElement> {
 export function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
 
-  const isActivated = value === index;
-
   return (
     <div
       role='tabpanel'
-      hidden={!isActivated}
+      hidden={value !== index}
       id={`full-width-tabpanel-${index}`}
       aria-labelledby={`full-width-tab-${index}`}
       dir={'ltr'}
       {...other}
     >
-      {isActivated ? children : null}
+      {value === index && children}
     </div>
   );
 }

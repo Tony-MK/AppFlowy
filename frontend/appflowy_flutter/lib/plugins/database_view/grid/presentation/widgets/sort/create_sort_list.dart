@@ -124,7 +124,6 @@ class _SortTextFieldDelegate extends SliverPersistentHeaderDelegate {
   ) {
     return Container(
       padding: const EdgeInsets.only(bottom: 4),
-      color: Theme.of(context).cardColor,
       height: fixHeight,
       child: FlowyTextField(
         hintText: LocaleKeys.grid_settings_sortBy.tr(),

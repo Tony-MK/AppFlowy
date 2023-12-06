@@ -56,13 +56,12 @@ class _MobileTextCellState extends GridEditableTextCell<MobileTextCell> {
         child: TextField(
           controller: _controller,
           focusNode: focusNode,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 15),
+          style: widget.cellStyle.textStyle,
           decoration: InputDecoration(
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
             hintText: widget.cellStyle.placeholder,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: EdgeInsets.zero,
             isCollapsed: true,
           ),
           onTapOutside: (event) =>

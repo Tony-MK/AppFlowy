@@ -42,13 +42,11 @@ class MentionBlock extends StatelessWidget {
     required this.mention,
     required this.node,
     required this.index,
-    required this.textStyle,
   });
 
   final Map<String, dynamic> mention;
   final Node node;
   final int index;
-  final TextStyle? textStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +58,6 @@ class MentionBlock extends StatelessWidget {
         return MentionPageBlock(
           key: ValueKey(pageId),
           pageId: pageId,
-          textStyle: textStyle,
         );
       case MentionType.reminder:
       case MentionType.date:

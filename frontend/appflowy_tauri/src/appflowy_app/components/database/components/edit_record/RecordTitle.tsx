@@ -1,38 +1,30 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { Page, PageIcon } from '$app_reducers/pages/slice';
 import ViewTitle from '$app/components/_shared/ViewTitle';
 import { ViewIconTypePB } from '@/services/backend';
 import { useViewId } from '$app/hooks';
 import { updateRowMeta } from '$app/components/database/application/row/row_service';
-import { cellService, Field, RowMeta, TextCell } from '$app/components/database/application';
-import { useDatabase } from '$app/components/database';
-import { useCell } from '$app/components/database/components/cell/Cell.hooks';
+import { cellService, TextCell } from '$app/components/database/application';
 
 interface Props {
   page: Page | null;
-  row: RowMeta;
+  icon?: string;
+  cell: TextCell;
 }
 
-function RecordTitle({ row, page }: Props) {
-  const { fields } = useDatabase();
-  const field = useMemo(() => {
-    return fields.find((field) => field.isPrimary) as Field;
-  }, [fields]);
-  const rowId = row.id;
-  const cell = useCell(rowId, field) as TextCell;
-  const title = cell.data;
-
+function RecordTitle({ cell, page, icon }: Props) {
+  const { data: title, fieldId, rowId } = cell;
   const viewId = useViewId();
 
   const onTitleChange = useCallback(
     async (title: string) => {
       try {
-        await cellService.updateCell(viewId, rowId, field.id, title);
+        await cellService.updateCell(viewId, rowId, fieldId, title);
       } catch (e) {
         // toast.error('Failed to update title');
       }
     },
-    [field.id, rowId, viewId]
+    [fieldId, rowId, viewId]
   );
 
   const onUpdateIcon = useCallback(
@@ -55,10 +47,10 @@ function RecordTitle({ row, page }: Props) {
           view={{
             ...page,
             name: title,
-            icon: row.icon
+            icon: icon
               ? {
                   ty: ViewIconTypePB.Emoji,
-                  value: row.icon,
+                  value: icon,
                 }
               : undefined,
           }}

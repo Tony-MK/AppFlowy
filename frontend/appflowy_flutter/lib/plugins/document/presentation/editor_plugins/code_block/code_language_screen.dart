@@ -23,7 +23,9 @@ class MobileCodeLanguagePickerScreen extends StatelessWidget {
           LocaleKeys.titleBar_language.tr(),
           fontSize: 14.0,
         ),
-        leading: const AppBarBackButton(),
+        leading: AppBarBackButton(
+          onTap: () => context.pop(),
+        ),
       ),
       body: SafeArea(
         child: ListView.separated(

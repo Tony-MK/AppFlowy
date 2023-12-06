@@ -1,14 +1,15 @@
 import React, { useRef } from 'react';
-import { Property } from '$app/components/database/components/property';
+import { Field } from '$app/components/database/components/field';
 import { Field as FieldType } from '$app/components/database/application';
+import { FieldMenu } from '$app/components/database/components/field/FieldMenu';
 
 interface Props {
   field: FieldType;
-  menuOpened?: boolean;
-  onOpenMenu?: () => void;
-  onCloseMenu?: () => void;
+  openMenu: boolean;
+  onOpenMenu: () => void;
+  onCloseMenu: () => void;
 }
-function PropertyName({ field, menuOpened = false, onOpenMenu, onCloseMenu }: Props) {
+function PropertyName({ field, openMenu, onOpenMenu, onCloseMenu }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
 
   return (
@@ -18,15 +19,16 @@ function PropertyName({ field, menuOpened = false, onOpenMenu, onCloseMenu }: Pr
         onContextMenu={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          onOpenMenu?.();
+          onOpenMenu();
         }}
-        className={'flex min-h-[36px] w-[200px] cursor-pointer items-center'}
+        className={'flex w-[200px] cursor-pointer items-center'}
         onClick={onOpenMenu}
       >
-        <Property menuOpened={menuOpened} onOpenMenu={onOpenMenu} onCloseMenu={onCloseMenu} field={field} />
+        <Field field={field} />
       </div>
+      {openMenu && <FieldMenu field={field} open={openMenu} anchorEl={ref.current} onClose={onCloseMenu} />}
     </>
   );
 }
 
-export default PropertyName;
+export default React.memo(PropertyName);

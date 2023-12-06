@@ -232,12 +232,9 @@ class _SelectOptionWrapState extends State<SelectOptionWrap> {
             children: [
               Expanded(child: _buildMobileOptions(isInRowDetail: true)),
               const HSpace(6),
-              RotatedBox(
+              const RotatedBox(
                 quarterTurns: 3,
-                child: Icon(
-                  Icons.chevron_left,
-                  color: Theme.of(context).hintColor,
-                ),
+                child: Icon(Icons.chevron_left),
               ),
               const HSpace(2),
             ],
@@ -246,8 +243,6 @@ class _SelectOptionWrapState extends State<SelectOptionWrap> {
       );
     } else {
       return FlowyButton(
-        hoverColor: Colors.transparent,
-        radius: BorderRadius.zero,
         text: Padding(
           padding: widget.cellStyle.cellPadding ?? GridSize.cellContentInsets,
           child: _buildMobileOptions(isInRowDetail: false),
@@ -303,7 +298,7 @@ class _SelectOptionWrapState extends State<SelectOptionWrap> {
       return Container(
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.symmetric(vertical: 1),
-        child: FlowyText(
+        child: FlowyText.medium(
           widget.cellStyle.placeholder,
           color: Theme.of(context).hintColor,
         ),
