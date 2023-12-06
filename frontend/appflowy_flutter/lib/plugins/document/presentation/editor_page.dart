@@ -91,11 +91,14 @@ class _AppFlowyEditorPageState extends State<AppFlowyEditorPage> {
   final List<ToolbarItem> toolbarItems = [
     smartEditItem..isActive = onlyShowInSingleTextTypeSelectionAndExcludeTable,
     paragraphItem..isActive = onlyShowInSingleTextTypeSelectionAndExcludeTable,
-    ...(headingItems
+    ...headingItems
       ..forEach(
         (e) => e.isActive = onlyShowInSingleSelectionAndTextType,
-      )),
-    ...markdownFormatItems,
+      ),
+    ...markdownFormatItems
+      ..forEach(
+        (e) => e.isActive = showInAnyTextType,
+      ),
     quoteItem..isActive = onlyShowInSingleTextTypeSelectionAndExcludeTable,
     bulletedListItem
       ..isActive = onlyShowInSingleTextTypeSelectionAndExcludeTable,
@@ -113,6 +116,7 @@ class _AppFlowyEditorPageState extends State<AppFlowyEditorPage> {
 
   late final Map<String, BlockComponentBuilder> blockComponentBuilders =
       getEditorBuilderMap(
+    slashMenuItems: slashMenuItems,
     context: context,
     editorState: widget.editorState,
     styleCustomizer: widget.styleCustomizer,
@@ -500,4 +504,15 @@ class _AppFlowyEditorPageState extends State<AppFlowyEditorPage> {
     }
     await editorState.apply(transaction);
   }
+}
+
+bool showInAnyTextType(EditorState editorState) {
+  final selection = editorState.selection;
+  if (selection == null) {
+    return false;
+  }
+  final nodes = editorState.getNodesInSelection(selection);
+  return nodes.any(
+    (node) => toolbarItemWhiteList.contains(node.type),
+  );
 }

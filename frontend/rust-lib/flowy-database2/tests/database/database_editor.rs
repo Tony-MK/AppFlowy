@@ -4,6 +4,7 @@ use std::sync::Arc;
 use collab_database::database::{gen_database_view_id, timestamp};
 use collab_database::fields::Field;
 use collab_database::rows::{CreateRowParams, RowDetail, RowId};
+use collab_database::views::OrderObjectPosition;
 use strum::EnumCount;
 
 use event_integration::folder_event::ViewTest;
@@ -146,7 +147,7 @@ impl DatabaseEditorTest {
 
   pub fn get_multi_select_type_option(&self, field_id: &str) -> Vec<SelectOption> {
     let field_type = FieldType::MultiSelect;
-    let field = self.get_field(field_id, field_type.clone());
+    let field = self.get_field(field_id, field_type);
     let type_option = field
       .get_type_option::<MultiSelectTypeOption>(field_type)
       .unwrap();
@@ -155,7 +156,7 @@ impl DatabaseEditorTest {
 
   pub fn get_single_select_type_option(&self, field_id: &str) -> SingleSelectTypeOption {
     let field_type = FieldType::SingleSelect;
-    let field = self.get_field(field_id, field_type.clone());
+    let field = self.get_field(field_id, field_type);
     field
       .get_type_option::<SingleSelectTypeOption>(field_type)
       .unwrap()
@@ -164,7 +165,7 @@ impl DatabaseEditorTest {
   #[allow(dead_code)]
   pub fn get_checklist_type_option(&self, field_id: &str) -> ChecklistTypeOption {
     let field_type = FieldType::Checklist;
-    let field = self.get_field(field_id, field_type.clone());
+    let field = self.get_field(field_id, field_type);
     field
       .get_type_option::<ChecklistTypeOption>(field_type)
       .unwrap()
@@ -173,7 +174,7 @@ impl DatabaseEditorTest {
   #[allow(dead_code)]
   pub fn get_checkbox_type_option(&self, field_id: &str) -> CheckboxTypeOption {
     let field_type = FieldType::Checkbox;
-    let field = self.get_field(field_id, field_type.clone());
+    let field = self.get_field(field_id, field_type);
     field
       .get_type_option::<CheckboxTypeOption>(field_type)
       .unwrap()
@@ -410,7 +411,7 @@ impl<'a> TestRowBuilder<'a> {
       cells: self.cell_build.build(),
       height: 60,
       visibility: true,
-      prev_row_id: None,
+      row_position: OrderObjectPosition::End,
       timestamp: timestamp(),
     }
   }

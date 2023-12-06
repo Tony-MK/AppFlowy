@@ -1,14 +1,12 @@
 import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/mobile/presentation/database/card/card_detail/widgets/widgets.dart';
 import 'package:appflowy/mobile/presentation/database/card/card_property_edit/mobile_field_type_option_editor.dart';
-import 'package:appflowy/mobile/presentation/database/card/card_property_edit/widgets/property_title.dart';
+import 'package:appflowy/mobile/presentation/database/card/card_property_edit/widgets/widgets.dart';
 import 'package:appflowy/plugins/database_view/application/field/field_controller.dart';
 import 'package:appflowy/plugins/database_view/application/field/field_editor_bloc.dart';
 import 'package:appflowy/plugins/database_view/application/field/type_option/type_option_context.dart';
 import 'package:appflowy/plugins/database_view/grid/application/row/row_detail_bloc.dart';
 import 'package:appflowy/plugins/database_view/widgets/setting/field_visibility_extension.dart';
-import 'package:appflowy/workspace/presentation/widgets/toggle/toggle.dart';
-import 'package:appflowy/workspace/presentation/widgets/toggle/toggle_style.dart';
 import 'package:appflowy_backend/protobuf/flowy-database2/protobuf.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra_ui/widget/spacing.dart';
@@ -49,38 +47,44 @@ class MobileFieldEditor extends StatelessWidget {
           // for field type edit option
           final dataController =
               context.read<FieldEditorBloc>().typeOptionController;
-
-          return Padding(
+          final fieldInfoVisibility =
+              fieldController.getField(field.id)?.visibility;
+          return Container(
             padding: const EdgeInsets.all(16),
+            color: Theme.of(context).colorScheme.secondary,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // TODO(yijing): improve hint text
-                PropertyTitle(LocaleKeys.settings_user_name.tr()),
+                PropertyEditGroupTitle(LocaleKeys.settings_user_name.tr()),
                 BlocSelector<FieldEditorBloc, FieldEditorState, String>(
                   selector: (state) => state.field.name,
                   builder: (context, fieldName) =>
                       MobileFieldNameTextField(text: fieldName),
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: PropertyTitle(
-                        LocaleKeys.grid_field_visibility.tr(),
+                const VSpace(16),
+                PropertyEditGroupTitle(LocaleKeys.grid_field_visibility.tr()),
+                PropertyEditContainer(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      PropertyTitle(
+                        LocaleKeys.board_showOnCard.tr(),
                       ),
-                    ),
-                    VisibilitySwitch(
-                      isVisible:
-                          state.field.visibility?.isVisibleState() ?? false,
-                      onChanged: () => context.read<RowDetailBloc>().add(
-                            RowDetailEvent.toggleFieldVisibility(
-                              state.field.id,
+                      VisibilitySwitch(
+                        isFieldHidden: !(fieldInfoVisibility != null
+                            ? fieldInfoVisibility.isVisibleState()
+                            : field.visibility),
+                        onChanged: () => context.read<RowDetailBloc>().add(
+                              RowDetailEvent.toggleFieldVisibility(
+                                state.field.id,
+                              ),
                             ),
-                          ),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-                const VSpace(8),
+                const VSpace(16),
+                PropertyEditGroupTitle(LocaleKeys.board_setting.tr()),
                 // edit property type and settings
                 if (!typeOptionLoader.field.isPrimary)
                   MobileFieldTypeOptionEditor(dataController: dataController),
@@ -96,11 +100,11 @@ class MobileFieldEditor extends StatelessWidget {
 class VisibilitySwitch extends StatefulWidget {
   const VisibilitySwitch({
     super.key,
-    required this.isVisible,
+    required this.isFieldHidden,
     this.onChanged,
   });
 
-  final bool isVisible;
+  final bool isFieldHidden;
   final Function? onChanged;
 
   @override
@@ -108,17 +112,18 @@ class VisibilitySwitch extends StatefulWidget {
 }
 
 class _VisibilitySwitchState extends State<VisibilitySwitch> {
-  late bool _isVisible = widget.isVisible;
+  late bool _isFieldHidden = widget.isFieldHidden;
 
   @override
   Widget build(BuildContext context) {
-    return Toggle(
-      padding: EdgeInsets.zero,
-      value: _isVisible,
-      style: ToggleStyle.mobile,
-      onChanged: (newValue) {
-        widget.onChanged?.call();
-        setState(() => _isVisible = newValue);
+    return Switch.adaptive(
+      value: !_isFieldHidden,
+      activeColor: Theme.of(context).colorScheme.primary,
+      onChanged: (value) {
+        setState(() {
+          _isFieldHidden = !_isFieldHidden;
+          widget.onChanged?.call();
+        });
       },
     );
   }
