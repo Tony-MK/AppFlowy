@@ -7,15 +7,14 @@ import 'package:flutter/material.dart';
 const double menuWidth = 300.0;
 const double menuHeight = 200.0;
 const Offset menuOffset = Offset(0, 8.0);
-const String shortcutCharacter = ':';
 
 const EmojiPickerConfig config = EmojiPickerConfig(
   emojiNumberPerRow: emojiNumberPerRow,
   emojiSizeMax: emojiSizeMax,
   bgColor: Colors.transparent,
   categoryIconColor: Colors.grey,
-  //selectedCategoryIconColor: Color(0xff333333),
-  //progressIndicatorColor: Color(0xff333333),
+  selectedCategoryIconColor: Color(0xff333333),
+  progressIndicatorColor: Color(0xff333333),
   buttonMode: ButtonMode.MATERIAL,
   initCategory: EmojiCategory.RECENT,
 );
@@ -47,16 +46,6 @@ void openEmojiShortcutPicker(
   final selectionRects = editorState.service.selectionService.selectionRects;
   if (selectionRects.isEmpty) return;
 
-  /*
-  // Have no idea why the focus will lose after inserting on web.
-  if (foundation.kIsWeb) {
-    keepEditorFocusNotifier.increase();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => keepEditorFocusNotifier.decrease(),
-    );
-  }
-  */
-
   await editorState.insertTextAtCurrentSelection(':');
 
   final editorHeight = editorState.renderBox!.size.height;
@@ -64,7 +53,7 @@ void openEmojiShortcutPicker(
   final editorOffset =
       editorState.renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
 
-  // Cursor postion
+  // Cursor position
   final cursor = selectionRects.first;
 
   // Check if emoji menu is will overflow on right side of editor
