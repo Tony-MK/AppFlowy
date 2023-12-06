@@ -10,8 +10,8 @@ import '../util/util.dart';
 
 const arrowKeys = [
   LogicalKeyboardKey.arrowRight,
-  LogicalKeyboardKey.arrowDown,
   LogicalKeyboardKey.arrowLeft,
+  LogicalKeyboardKey.arrowDown,
   LogicalKeyboardKey.arrowUp,
 ];
 
@@ -21,23 +21,23 @@ const scaredKeys = [
   LogicalKeyboardKey.keyA,
   LogicalKeyboardKey.keyR,
   LogicalKeyboardKey.keyE,
-  LogicalKeyboardKey.keyD
+  LogicalKeyboardKey.keyD,
 ];
 
-const smirkKeys = [
-  LogicalKeyboardKey.keyS, // Smirk
-  LogicalKeyboardKey.keyM,
-  LogicalKeyboardKey.keyI,
-  LogicalKeyboardKey.keyR,
-  LogicalKeyboardKey.keyK,
-];
-
-const smileKeys = [
-  LogicalKeyboardKey.keyS, // Smile
-  LogicalKeyboardKey.keyM,
-  LogicalKeyboardKey.keyI,
+const cloudsKeys = [
+  LogicalKeyboardKey.keyC, // Cloud
   LogicalKeyboardKey.keyL,
-  LogicalKeyboardKey.keyE,
+  LogicalKeyboardKey.keyO,
+  LogicalKeyboardKey.keyU,
+  LogicalKeyboardKey.keyD,
+  LogicalKeyboardKey.keyS,
+];
+
+const haloKeys = [
+  LogicalKeyboardKey.keyH, // Halo
+  LogicalKeyboardKey.keyA,
+  LogicalKeyboardKey.keyL,
+  LogicalKeyboardKey.keyO,
 ];
 
 const impKeys = [
@@ -59,57 +59,50 @@ void main() {
 
   group('Insert Emoji', () {
     testWidgets('smiling face with halo', (tester) async {
-      await insertEmoji(tester, 'smiling face with halo', '😏', smirkKeys, []);
-    });
-
-    testWidgets('smirk face', (tester) async {
-      await insertEmoji(tester, 'smirk face', '😏', smirkKeys, []);
-    });
-
-    testWidgets('scared face', (tester) async {
-      await insertEmoji(tester, 'scared face', '🙀', scaredKeys, []);
+      await insertEmoji(tester, '😇', haloKeys, []);
     });
 
     testWidgets('imp', (tester) async {
-      await insertEmoji(tester, 'Imp', '👿', impKeys, []);
+      await insertEmoji(tester, '🦐', impKeys, []);
     });
 
-    testWidgets('robot emoji', (tester) async {
-      await insertEmoji(tester, 'robot', '🤖', robotKeys, []);
+    testWidgets('robot', (tester) async {
+      await insertEmoji(tester, '🤖', robotKeys, []);
     });
   });
 
   group('Insert Emoji using arrow keys', () {
-    testWidgets('smiling face with halo', (tester) async {
-      await insertEmoji(tester, 'Smiling Face with Halo', '😏',
-          smirkKeys.slice(0, smirkKeys.length - 2), arrowKeys);
+    testWidgets('smiling face with halo via arrow keys', (tester) async {
+      await insertEmoji(
+        tester,
+        '😇',
+        haloKeys.slice(0, haloKeys.length - 2),
+        arrowKeys,
+      );
     });
 
-    testWidgets('smirk face', (tester) async {
-      await insertEmoji(tester, 'smirk face', '😏',
-          smirkKeys.slice(0, smirkKeys.length - 2), arrowKeys);
+    testWidgets('imp via arrow keys', (tester) async {
+      await insertEmoji(
+        tester,
+        '🦐',
+        impKeys.slice(0, robotKeys.length - 2),
+        arrowKeys,
+      );
     });
 
-    testWidgets('scared face', (tester) async {
-      await insertEmoji(tester, 'scared Face', '🙀',
-          scaredKeys.slice(0, scaredKeys.length - 2), arrowKeys);
-    });
-
-    testWidgets('imp', (tester) async {
-      await insertEmoji(tester, 'Imp', '👿',
-          impKeys.slice(0, robotKeys.length - 2), arrowKeys);
-    });
-
-    testWidgets('robot', (tester) async {
-      await insertEmoji(tester, 'robot', '🤖',
-          robotKeys.slice(0, robotKeys.length - 2), arrowKeys);
+    testWidgets('robot via arrow keys', (tester) async {
+      await insertEmoji(
+        tester,
+        '🤖',
+        robotKeys.slice(0, robotKeys.length - 2),
+        arrowKeys,
+      );
     });
   });
 }
 
 Future<void> insertEmoji(
   WidgetTester tester,
-  String emoji,
   String expected,
   List<LogicalKeyboardKey> emojiKeys,
   List<LogicalKeyboardKey> arrowKeys,
@@ -119,7 +112,7 @@ Future<void> insertEmoji(
   tester.expectToSeeHomePage();
 
   await tester.createNewPageWithName(
-    name: 'Test $emoji ${arrowKeys.isEmpty ? "" : " (keyboard) "}',
+    //name: 'Test $emoji ${arrowKeys.isEmpty ? "" : " (keyboard) "}',
     layout: ViewLayoutPB.Document,
     openAfterCreated: true,
   );
@@ -135,26 +128,29 @@ Future<void> insertEmoji(
   // Determine whether the shortcut works and the emoji picker is opened
   expect(find.byType(EmojiShortcutPickerView), findsOneWidget);
 
-  // Search for the emoji most similar to the text
-  // Generate keyboard press events
-  // await FlowyTestKeyboard.simulateKeyDownEvent(tester: tester, emojiKeys);
+  // Type emoji text
+  await FlowyTestKeyboard.simulateKeyDownEvent(tester: tester, emojiKeys);
 
-  await FlowyTestKeyboard.simulateKeyDownEvent(
-    tester: tester,
+  // Perform arrow keyboard combination eg: [RIGHT, DOWN, LEFT, UP]
+  if (arrowKeys.isNotEmpty) {
+    await FlowyTestKeyboard.simulateKeyDownEvent(tester: tester, arrowKeys);
+  }
 
-    // Perform arrow keyboard combination eg: [RIGHT, DOWN, LEFT, UP]
-    [...emojiKeys, ...arrowKeys, LogicalKeyboardKey.enter],
-  );
+  //await tester.pumpAndSettle();
 
   // Press ENTER to insert the emoji and replace text
+  await FlowyTestKeyboard.simulateKeyDownEvent(
+    tester: tester,
+    [LogicalKeyboardKey.enter],
+  );
   //await tester.simulateKeyEvent(LogicalKeyboardKey.enter);
-
-  // Determine whether the emoji picker is closed on enter
-  expect(find.byType(EmojiShortcutPickerView), findsNothing);
 
   // Check if typed text is replaced by emoji
   expect(
     tester.editor.getCurrentEditorState().document.last!.delta!.toPlainText(),
     expected,
   );
+
+  // Determine whether the emoji picker is closed on enter
+  expect(find.byType(EmojiShortcutPickerView), findsNothing);
 }

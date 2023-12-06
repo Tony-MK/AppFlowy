@@ -103,12 +103,7 @@ void openEmojiShortcutPicker(
               overlayEntry.remove,
             );
           },
-          onEmojiSelected: (_, emoji) async {
-            await editorState.deleteBackward();
-
-            // Insert actual emoji
-            await editorState.insertTextAtCurrentSelection(emoji.emoji);
-          },
+          onEmojiSelected: (_, emoji) async {},
         ),
       ),
     ),
