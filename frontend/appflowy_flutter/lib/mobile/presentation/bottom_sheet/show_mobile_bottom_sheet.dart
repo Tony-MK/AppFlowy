@@ -1,4 +1,3 @@
-import 'package:appflowy/mobile/presentation/base/app_bar_actions.dart';
 import 'package:appflowy/plugins/base/drag_handler.dart';
 import 'package:flowy_infra/size.dart';
 import 'package:flowy_infra_ui/flowy_infra_ui.dart' hide WidgetBuilder;
@@ -15,9 +14,6 @@ Future<T?> showMobileBottomSheet<T>(
   bool showHeader = false,
   bool showCloseButton = false,
   String title = '', // only works if showHeader is true
-  Color? backgroundColor,
-  bool isScrollControlled = true,
-  BoxConstraints? constraints,
 }) async {
   assert(() {
     if (showCloseButton || title.isNotEmpty) assert(showHeader);
@@ -26,12 +22,10 @@ Future<T?> showMobileBottomSheet<T>(
 
   return showModalBottomSheet<T>(
     context: context,
-    isScrollControlled: isScrollControlled,
+    isScrollControlled: true,
     enableDrag: isDragEnabled,
     useSafeArea: true,
     clipBehavior: Clip.antiAlias,
-    backgroundColor: backgroundColor,
-    constraints: constraints,
     shape: shape ??
         const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
@@ -57,8 +51,14 @@ Future<T?> showMobileBottomSheet<T>(
               showCloseButton
                   ? Padding(
                       padding: EdgeInsets.only(left: padding.left),
-                      child: const AppBarCloseButton(
+                      child: FlowyButton(
+                        useIntrinsicWidth: true,
+                        text: const Icon(
+                          Icons.close,
+                          size: 24,
+                        ),
                         margin: EdgeInsets.zero,
+                        onTap: () => Navigator.of(context).pop(),
                       ),
                     )
                   : const SizedBox.shrink(),

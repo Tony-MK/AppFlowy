@@ -16,8 +16,9 @@ export async function getDatabaseId(viewId: string): Promise<string> {
 
   const result = await DatabaseEventGetDatabaseId(payload);
 
-  return result.map((value) => value.value).unwrap();
+  return result.map(value => value.value).unwrap();
 }
+
 
 export async function getDatabase(viewId: string) {
   const payload = DatabaseViewIdPB.fromObject({
@@ -26,17 +27,15 @@ export async function getDatabase(viewId: string) {
 
   const result = await DatabaseEventGetDatabase(payload);
 
-  return result
-    .map((value) => {
-      return {
-        id: value.id,
-        isLinked: value.is_linked,
-        layoutType: value.layout_type,
-        fieldIds: value.fields.map((field) => field.field_id),
-        rowMetas: value.rows.map(pbToRowMeta),
-      };
-    })
-    .unwrap();
+  return result.map(value => {
+    return {
+      id: value.id,
+      isLinked: value.is_linked,
+      layoutType: value.layout_type,
+      fieldIds: value.fields.map(field => field.field_id),
+      rowMetas: value.rows.map(pbToRowMeta),
+    };
+  }).unwrap();
 }
 
 export async function getDatabaseSetting(viewId: string) {
@@ -46,23 +45,31 @@ export async function getDatabaseSetting(viewId: string) {
 
   const result = await DatabaseEventGetDatabaseSetting(payload);
 
-  return result
-    .map((value) => {
-      return {
-        filters: value.filters.items.map(pbToFilter),
-        sorts: value.sorts.items.map(pbToSort),
-        groupSettings: value.group_settings.items.map(pbToGroupSetting),
-      };
-    })
-    .unwrap();
+  return result.map(value => {
+    return {
+      filters: value.filters.items.map(pbToFilter),
+      sorts: value.sorts.items.map(pbToSort),
+      groupSettings: value.group_settings.items.map(pbToGroupSetting),
+    };
+  }).unwrap();
 }
 
 export async function openDatabase(viewId: string): Promise<Database> {
-  const { id, isLinked, layoutType, fieldIds, rowMetas } = await getDatabase(viewId);
+  const {
+    id,
+    isLinked,
+    layoutType,
+    fieldIds,
+    rowMetas,
+  } = await getDatabase(viewId);
 
-  const { filters, sorts, groupSettings } = await getDatabaseSetting(viewId);
+  const {
+    filters,
+    sorts,
+    groupSettings,
+  } = await getDatabaseSetting(viewId);
 
-  const { fields, typeOptions } = await fieldService.getFields(viewId, fieldIds);
+  const fields = await fieldService.getFields(viewId, fieldIds);
 
   const groups = await groupService.getGroups(viewId);
 
@@ -76,7 +83,5 @@ export async function openDatabase(viewId: string): Promise<Database> {
     sorts,
     groups,
     groupSettings,
-    typeOptions,
-    cells: {},
   };
 }

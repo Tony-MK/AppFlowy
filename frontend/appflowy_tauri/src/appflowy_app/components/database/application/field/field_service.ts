@@ -11,7 +11,6 @@ import {
   FieldSettingsChangesetPB,
   FieldVisibility,
   DatabaseViewIdPB,
-  CreateFieldPosition,
 } from '@/services/backend';
 import {
   DatabaseEventDuplicateField,
@@ -25,16 +24,9 @@ import {
   DatabaseEventGetAllFieldSettings,
 } from '@/services/backend/events/flowy-database2';
 import { Field, pbToField } from './field_types';
-import { getTypeOption } from './type_option';
-import { Database } from '$app/components/database/application';
+import { bytesToTypeOption, getTypeOption } from './type_option';
 
-export async function getFields(
-  viewId: string,
-  fieldIds?: string[]
-): Promise<{
-  fields: Field[];
-  typeOptions: Database['typeOptions'];
-}> {
+export async function getFields(viewId: string, fieldIds?: string[]): Promise<Field[]> {
   const payload = GetFieldPayloadPB.fromObject({
     view_id: viewId,
     field_ids: fieldIds
@@ -56,50 +48,29 @@ export async function getFields(
     return Promise.reject('Failed to get fields');
   }
 
-  const typeOptions: Database['typeOptions'] = {};
-
   const fields = await Promise.all(
     result.val.items.map(async (item) => {
       const setting = settings.val.items.find((setting) => setting.field_id === item.id);
-
       const field = pbToField(item);
-
-      const typeOption = await getTypeOption(viewId, item.id, item.field_type);
-
-      if (typeOption) {
-        typeOptions[item.id] = typeOption;
-      }
+      const typeOption = await getTypeOption(viewId, field.id, field.type);
 
       return {
         ...field,
         visibility: setting?.visibility,
         width: setting?.width,
+        typeOption,
       };
     })
   );
 
-  return { fields, typeOptions };
+  return fields;
 }
 
-export async function createField({
-  viewId,
-  targetFieldId,
-  fieldPosition,
-  fieldType,
-  data,
-}: {
-  viewId: string;
-  targetFieldId?: string;
-  fieldPosition?: CreateFieldPosition;
-  fieldType?: FieldType;
-  data?: Uint8Array;
-}): Promise<Field> {
+export async function createField(viewId: string, fieldType?: FieldType, data?: Uint8Array): Promise<Field> {
   const payload = CreateFieldPayloadPB.fromObject({
     view_id: viewId,
     field_type: fieldType,
     type_option_data: data,
-    target_field_id: targetFieldId,
-    field_position: fieldPosition,
   });
 
   const result = await DatabaseEventCreateField(payload);
@@ -108,7 +79,10 @@ export async function createField({
     return Promise.reject('Failed to create field');
   }
 
-  return pbToField(result.val.field);
+  const field = pbToField(result.val.field);
+
+  field.typeOption = bytesToTypeOption(result.val.type_option_data, field.type);
+  return field;
 }
 
 export async function duplicateField(viewId: string, fieldId: string): Promise<void> {
@@ -203,12 +177,3 @@ export async function updateFieldSetting(
 
   return result.val;
 }
-
-export const reorderFields = (list: Field[], startIndex: number, endIndex: number) => {
-  const result = Array.from(list);
-  const [removed] = result.splice(startIndex, 1);
-
-  result.splice(endIndex, 0, removed);
-
-  return result;
-};

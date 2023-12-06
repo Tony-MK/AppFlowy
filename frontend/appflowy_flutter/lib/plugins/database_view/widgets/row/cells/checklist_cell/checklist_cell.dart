@@ -19,13 +19,11 @@ class ChecklistCellStyle extends GridCellStyle {
   final String placeholder;
   final EdgeInsets? cellPadding;
   final bool showTasksInline;
-  final bool useRoundedBorders;
 
   const ChecklistCellStyle({
     this.placeholder = "",
     this.cellPadding,
     this.showTasksInline = false,
-    this.useRoundedBorders = false,
   });
 }
 

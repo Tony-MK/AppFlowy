@@ -6,7 +6,6 @@ import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/mobile/presentation/base/option_color_list.dart';
 import 'package:appflowy/mobile/presentation/bottom_sheet/bottom_sheet.dart';
 import 'package:appflowy/mobile/presentation/database/card/card_detail/widgets/_field_options.dart';
-import 'package:appflowy/mobile/presentation/database/card/card_detail/widgets/widgets.dart';
 import 'package:appflowy/mobile/presentation/widgets/widgets.dart';
 import 'package:appflowy/plugins/database_view/application/field/field_service.dart';
 import 'package:appflowy/plugins/database_view/application/field/type_option/number_format_bloc.dart';
@@ -87,8 +86,6 @@ class FieldOptionValues {
         return MultiSelectTypeOptionPB(
           options: selectOption,
         ).writeToBuffer();
-      case FieldType.Checklist:
-        return ChecklistTypeOptionPB().writeToBuffer();
       default:
         throw UnimplementedError();
     }
@@ -191,7 +188,7 @@ class _FieldOptionEditorState extends State<FieldOptionEditor> {
         child: Column(
           children: [
             const _Divider(),
-            OptionTextField(
+            _OptionTextField(
               controller: controller,
               type: values.type,
               onTextChanged: (value) {
@@ -290,24 +287,20 @@ class _FieldOptionEditorState extends State<FieldOptionEditor> {
             leftIcon: const FlowySvg(FlowySvgs.hide_s),
             onTap: () => widget.onAction?.call(FieldOptionAction.hide),
           ),
-          if (!widget.isPrimary) ...[
+          if (!widget.isPrimary)
             FlowyOptionTile.text(
               showTopBorder: false,
               text: LocaleKeys.button_duplicate.tr(),
               leftIcon: const FlowySvg(FlowySvgs.copy_s),
               onTap: () => widget.onAction?.call(FieldOptionAction.duplicate),
             ),
+          if (!widget.isPrimary)
             FlowyOptionTile.text(
               showTopBorder: false,
               text: LocaleKeys.button_delete.tr(),
-              textColor: Theme.of(context).colorScheme.error,
-              leftIcon: FlowySvg(
-                FlowySvgs.delete_s,
-                color: Theme.of(context).colorScheme.error,
-              ),
+              leftIcon: const FlowySvg(FlowySvgs.delete_s),
               onTap: () => widget.onAction?.call(FieldOptionAction.delete),
             ),
-          ],
         ]
     };
   }
@@ -340,6 +333,35 @@ class _FieldOptionEditorState extends State<FieldOptionEditor> {
     }
 
     widget.onOptionValuesChanged(values);
+  }
+}
+
+class _OptionTextField extends StatelessWidget {
+  const _OptionTextField({
+    required this.controller,
+    required this.type,
+    required this.onTextChanged,
+  });
+
+  final TextEditingController controller;
+  final FieldType type;
+  final void Function(String value) onTextChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlowyOptionTile.textField(
+      controller: controller,
+      textFieldPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+      onTextChanged: onTextChanged,
+      leftIcon: Padding(
+        padding: const EdgeInsets.only(left: 16.0),
+        child: FlowySvg(
+          type.svgData,
+          size: const Size.square(36.0),
+          blendMode: null,
+        ),
+      ),
+    );
   }
 }
 
@@ -509,7 +531,7 @@ class _TimeOptionState extends State<_TimeOption> {
           return FlowyOptionTile.checkbox(
             text: format.title(),
             isSelected: selectedFormat == format,
-            showTopBorder: index == 0,
+            showTopBorder: false,
             onTap: () {
               widget.onSelected(format);
               setState(() {

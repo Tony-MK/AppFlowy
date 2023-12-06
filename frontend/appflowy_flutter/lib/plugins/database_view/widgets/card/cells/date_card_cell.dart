@@ -61,7 +61,6 @@ class _DateCellState extends State<DateCardCell> {
                 state.dateStr,
                 fontSize: 11,
                 color: Theme.of(context).hintColor,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           );

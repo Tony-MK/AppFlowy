@@ -127,12 +127,9 @@ class _DesktopBoardContentState extends State<DesktopBoardContent> {
   late final AppFlowyBoardScrollController scrollManager;
 
   final config = const AppFlowyBoardConfig(
-    groupMargin: EdgeInsets.symmetric(horizontal: 4),
-    groupBodyPadding: EdgeInsets.symmetric(horizontal: 4),
-    groupFooterPadding: EdgeInsets.fromLTRB(4, 14, 4, 4),
+    groupBackgroundColor: Color(0xffF7F8FC),
     groupHeaderPadding: EdgeInsets.symmetric(horizontal: 8),
     cardMargin: EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-    stretchGroupHeight: false,
   );
 
   @override
@@ -172,7 +169,12 @@ class _DesktopBoardContentState extends State<DesktopBoardContent> {
               scrollController: scrollController,
               controller: context.read<BoardBloc>().boardController,
               groupConstraints: const BoxConstraints.tightFor(width: 256),
-              config: config,
+              config: const AppFlowyBoardConfig(
+                groupMargin: EdgeInsets.symmetric(horizontal: 4),
+                groupBodyPadding: EdgeInsets.symmetric(horizontal: 4),
+                groupFooterPadding: EdgeInsets.fromLTRB(4, 14, 4, 4),
+                stretchGroupHeight: false,
+              ),
               leading: HiddenGroupsColumn(margin: config.groupHeaderPadding),
               trailing: showCreateGroupButton
                   ? BoardTrailing(scrollController: scrollController)
@@ -246,7 +248,7 @@ class _DesktopBoardContentState extends State<DesktopBoardContent> {
     final isEditing = boardBloc.state.isEditingRow &&
         boardBloc.state.editingRow?.row.id == groupItem.row.id;
 
-    final groupItemId = "${groupData.group.groupId}${groupItem.row.id}";
+    final groupItemId = groupItem.row.id + groupData.group.groupId;
 
     return AppFlowyGroupCard(
       key: ValueKey(groupItemId),

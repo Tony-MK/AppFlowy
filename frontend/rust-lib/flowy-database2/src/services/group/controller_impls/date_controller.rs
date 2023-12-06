@@ -1,7 +1,11 @@
 use std::format;
+use std::str::FromStr;
 
 use async_trait::async_trait;
-use chrono::{DateTime, Datelike, Days, Duration, Local, NaiveDate, NaiveDateTime};
+use chrono::{
+  DateTime, Datelike, Days, Duration, Local, NaiveDate, NaiveDateTime, Offset, TimeZone,
+};
+use chrono_tz::Tz;
 use collab_database::database::timestamp;
 use collab_database::fields::{Field, TypeOptionData};
 use collab_database::rows::{new_cell_builder, Cell, Cells, Row, RowDetail};
@@ -80,7 +84,12 @@ impl GroupCustomize for DateGroupController {
     content: &str,
     cell_data: &<Self::GroupTypeOption as TypeOption>::CellData,
   ) -> bool {
-    content == group_id(cell_data, &self.context.get_setting_content())
+    content
+      == group_id(
+        cell_data,
+        &self.type_option,
+        &self.context.get_setting_content(),
+      )
   }
 
   fn create_or_delete_group_when_cell_changed(
@@ -93,10 +102,15 @@ impl GroupCustomize for DateGroupController {
     let mut inserted_group = None;
     if self
       .context
-      .get_group(&group_id(&_cell_data.into(), &setting_content))
+      .get_group(&group_id(
+        &_cell_data.into(),
+        &self.type_option,
+        &setting_content,
+      ))
       .is_none()
     {
-      let group = make_group_from_date_cell(&_cell_data.into(), &setting_content);
+      let group =
+        make_group_from_date_cell(&_cell_data.into(), &self.type_option, &setting_content);
       let mut new_group = self.context.add_new_group(group)?;
       new_group.group.rows.push(RowMetaPB::from(_row_detail));
       inserted_group = Some(new_group);
@@ -104,9 +118,11 @@ impl GroupCustomize for DateGroupController {
 
     // Delete the old group if there are no rows in that group
     let deleted_group = match _old_cell_data.and_then(|old_cell_data| {
-      self
-        .context
-        .get_group(&group_id(&old_cell_data.into(), &setting_content))
+      self.context.get_group(&group_id(
+        &old_cell_data.into(),
+        &self.type_option,
+        &setting_content,
+      ))
     }) {
       None => None,
       Some((_, group)) => {
@@ -138,7 +154,7 @@ impl GroupCustomize for DateGroupController {
     let setting_content = self.context.get_setting_content();
     self.context.iter_mut_status_groups(|group| {
       let mut changeset = GroupRowsNotificationPB::new(group.id.clone());
-      if group.id == group_id(&cell_data.into(), &setting_content) {
+      if group.id == group_id(&cell_data.into(), &self.type_option, &setting_content) {
         if !group.contains_row(&row_detail.row.id) {
           changeset
             .inserted_rows
@@ -178,13 +194,14 @@ impl GroupCustomize for DateGroupController {
     });
 
     let setting_content = self.context.get_setting_content();
-    let deleted_group = match self
-      .context
-      .get_group(&group_id(cell_data, &setting_content))
-    {
-      Some((_, group)) if group.rows.len() == 1 => Some(group.clone()),
-      _ => None,
-    };
+    let deleted_group =
+      match self
+        .context
+        .get_group(&group_id(cell_data, &self.type_option, &setting_content))
+      {
+        Some((_, group)) if group.rows.len() == 1 => Some(group.clone()),
+        _ => None,
+      };
 
     let deleted_group = deleted_group.map(|group| {
       let _ = self.context.delete_group(&group.id);
@@ -215,10 +232,11 @@ impl GroupCustomize for DateGroupController {
   ) -> Option<GroupPB> {
     let mut deleted_group = None;
     let setting_content = self.context.get_setting_content();
-    if let Some((_, group)) = self
-      .context
-      .get_group(&group_id(&_cell_data.into(), &setting_content))
-    {
+    if let Some((_, group)) = self.context.get_group(&group_id(
+      &_cell_data.into(),
+      &self.type_option,
+      &setting_content,
+    )) {
       if group.rows.len() == 1 {
         deleted_group = Some(GroupPB::from(group.clone()));
       }
@@ -261,7 +279,7 @@ impl GroupsBuilder for DateGroupBuilder {
   async fn build(
     field: &Field,
     context: &Self::Context,
-    _type_option: &Self::GroupTypeOption,
+    type_option: &Self::GroupTypeOption,
   ) -> GeneratedGroups {
     // Read all the cells for the grouping field
     let cells = context.get_all_cells().await;
@@ -272,7 +290,7 @@ impl GroupsBuilder for DateGroupBuilder {
       .flat_map(|value| value.into_date_field_cell_data())
       .filter(|cell| cell.timestamp.is_some())
       .map(|cell| {
-        let group = make_group_from_date_cell(&cell, &context.get_setting_content());
+        let group = make_group_from_date_cell(&cell, type_option, &context.get_setting_content());
         GeneratedGroupConfig {
           filter_content: group.id.clone(),
           group,
@@ -289,19 +307,27 @@ impl GroupsBuilder for DateGroupBuilder {
   }
 }
 
-fn make_group_from_date_cell(cell_data: &DateCellData, setting_content: &str) -> Group {
-  let group_id = group_id(cell_data, setting_content);
+fn make_group_from_date_cell(
+  cell_data: &DateCellData,
+  type_option: &DateTypeOption,
+  setting_content: &str,
+) -> Group {
+  let group_id = group_id(cell_data, type_option, setting_content);
   Group::new(
     group_id.clone(),
-    group_name_from_id(&group_id, setting_content),
+    group_name_from_id(&group_id, type_option, setting_content),
   )
 }
 
 const GROUP_ID_DATE_FORMAT: &str = "%Y/%m/%d";
 
-fn group_id(cell_data: &DateCellData, setting_content: &str) -> String {
+fn group_id(
+  cell_data: &DateCellData,
+  type_option: &DateTypeOption,
+  setting_content: &str,
+) -> String {
   let config = DateGroupConfiguration::from_json(setting_content).unwrap_or_default();
-  let date_time = date_time_from_timestamp(cell_data.timestamp);
+  let date_time = date_time_from_timestamp(cell_data.timestamp, &type_option.timezone_id);
 
   let date_format = GROUP_ID_DATE_FORMAT;
   let month_format = &date_format.replace("%d", "01");
@@ -316,7 +342,7 @@ fn group_id(cell_data: &DateCellData, setting_content: &str) -> String {
       .unwrap()
       .format(date_format),
     DateCondition::Relative => {
-      let now = date_time_from_timestamp(Some(timestamp())).date_naive();
+      let now = date_time_from_timestamp(Some(timestamp()), &type_option.timezone_id).date_naive();
       let date_time = date_time.date_naive();
 
       let diff = date_time.signed_duration_since(now).num_days();
@@ -356,7 +382,11 @@ fn group_id(cell_data: &DateCellData, setting_content: &str) -> String {
   date.to_string()
 }
 
-fn group_name_from_id(group_id: &str, setting_content: &str) -> String {
+fn group_name_from_id(
+  group_id: &str,
+  type_option: &DateTypeOption,
+  setting_content: &str,
+) -> String {
   let config = DateGroupConfiguration::from_json(setting_content).unwrap_or_default();
   let date = NaiveDate::parse_from_str(group_id, GROUP_ID_DATE_FORMAT).unwrap();
 
@@ -391,7 +421,7 @@ fn group_name_from_id(group_id: &str, setting_content: &str) -> String {
     },
     DateCondition::Year => date.year().to_string(),
     DateCondition::Relative => {
-      let now = date_time_from_timestamp(Some(timestamp()));
+      let now = date_time_from_timestamp(Some(timestamp()), &type_option.timezone_id);
 
       let diff = date.signed_duration_since(now.date_naive());
       let result = match diff.num_days() {
@@ -413,11 +443,14 @@ fn group_name_from_id(group_id: &str, setting_content: &str) -> String {
   }
 }
 
-fn date_time_from_timestamp(timestamp: Option<i64>) -> DateTime<Local> {
+fn date_time_from_timestamp(timestamp: Option<i64>, timezone_id: &str) -> DateTime<Local> {
   match timestamp {
     Some(timestamp) => {
       let naive = NaiveDateTime::from_timestamp_opt(timestamp, 0).unwrap();
-      let offset = *Local::now().offset();
+      let offset = match Tz::from_str(timezone_id) {
+        Ok(timezone) => timezone.offset_from_utc_datetime(&naive).fix(),
+        Err(_) => *Local::now().offset(),
+      };
 
       DateTime::<Local>::from_naive_utc_and_offset(naive, offset)
     },
@@ -447,11 +480,12 @@ mod tests {
 
   #[test]
   fn group_id_name_test() {
-    struct GroupIDTest {
+    struct GroupIDTest<'a> {
       cell_data: DateCellData,
       setting_content: String,
       exp_group_id: String,
       exp_group_name: String,
+      type_option: &'a DateTypeOption,
     }
 
     let mar_14_2022 = NaiveDateTime::from_timestamp_opt(1647251762, 0).unwrap();
@@ -471,6 +505,7 @@ mod tests {
     let tests = vec![
       GroupIDTest {
         cell_data: mar_14_2022_cd.clone(),
+        type_option: &local_date_type_option,
         setting_content: r#"{"condition": 0, "hide_empty": false}"#.to_string(),
         exp_group_id: "2022/03/01".to_string(),
         exp_group_name: "Mar 2022".to_string(),
@@ -481,6 +516,7 @@ mod tests {
           include_time: false,
           ..Default::default()
         },
+        type_option: &local_date_type_option,
         setting_content: r#"{"condition": 0, "hide_empty": false}"#.to_string(),
         exp_group_id: today.format(GROUP_ID_DATE_FORMAT).to_string(),
         exp_group_name: "Today".to_string(),
@@ -491,6 +527,7 @@ mod tests {
           include_time: false,
           ..Default::default()
         },
+        type_option: &local_date_type_option,
         setting_content: r#"{"condition": 0, "hide_empty": false}"#.to_string(),
         exp_group_id: today
           .checked_sub_days(Days::new(7))
@@ -501,6 +538,7 @@ mod tests {
       },
       GroupIDTest {
         cell_data: mar_14_2022_cd.clone(),
+        type_option: &local_date_type_option,
         setting_content: r#"{"condition": 1, "hide_empty": false}"#.to_string(),
         exp_group_id: "2022/03/14".to_string(),
         exp_group_name: "Mar 14, 2022".to_string(),
@@ -516,18 +554,21 @@ mod tests {
           include_time: false,
           ..Default::default()
         },
+        type_option: &local_date_type_option,
         setting_content: r#"{"condition": 2, "hide_empty": false}"#.to_string(),
         exp_group_id: "2022/03/14".to_string(),
         exp_group_name: "Week of Mar 14-20 2022".to_string(),
       },
       GroupIDTest {
         cell_data: mar_14_2022_cd.clone(),
+        type_option: &local_date_type_option,
         setting_content: r#"{"condition": 3, "hide_empty": false}"#.to_string(),
         exp_group_id: "2022/03/01".to_string(),
         exp_group_name: "Mar 2022".to_string(),
       },
       GroupIDTest {
         cell_data: mar_14_2022_cd,
+        type_option: &local_date_type_option,
         setting_content: r#"{"condition": 4, "hide_empty": false}"#.to_string(),
         exp_group_id: "2022/01/01".to_string(),
         exp_group_name: "2022".to_string(),
@@ -538,6 +579,7 @@ mod tests {
           include_time: false,
           ..Default::default()
         },
+        type_option: &default_date_type_option,
         setting_content: r#"{"condition": 1, "hide_empty": false}"#.to_string(),
         exp_group_id: "2023/06/02".to_string(),
         exp_group_name: "".to_string(),
@@ -548,6 +590,7 @@ mod tests {
           include_time: false,
           ..Default::default()
         },
+        type_option: &default_date_type_option,
         setting_content: r#"{"condition": 1, "hide_empty": false}"#.to_string(),
         exp_group_id: "2023/06/03".to_string(),
         exp_group_name: "".to_string(),
@@ -555,11 +598,11 @@ mod tests {
     ];
 
     for (i, test) in tests.iter().enumerate() {
-      let group_id = group_id(&test.cell_data, &test.setting_content);
+      let group_id = group_id(&test.cell_data, test.type_option, &test.setting_content);
       assert_eq!(test.exp_group_id, group_id, "test {}", i);
 
       if !test.exp_group_name.is_empty() {
-        let group_name = group_name_from_id(&group_id, &test.setting_content);
+        let group_name = group_name_from_id(&group_id, test.type_option, &test.setting_content);
         assert_eq!(test.exp_group_name, group_name, "test {}", i);
       }
     }

@@ -8,12 +8,10 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   properties: Field[];
   rowId: string;
   placeholderNode?: React.ReactNode;
-  openMenuPropertyId?: string;
-  setOpenMenuPropertyId?: (id?: string) => void;
 }
 
 function PropertyList(
-  { documentId, properties, rowId, placeholderNode, openMenuPropertyId, setOpenMenuPropertyId, ...props }: Props,
+  { documentId, properties, rowId, placeholderNode, ...props }: Props,
   ref: React.ForwardedRef<HTMLDivElement>
 ) {
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -46,15 +44,6 @@ function PropertyList(
                   ishovered={field.id === hoverId}
                   field={field}
                   rowId={rowId}
-                  menuOpened={openMenuPropertyId === field.id}
-                  onOpenMenu={() => {
-                    setOpenMenuPropertyId?.(field.id);
-                  }}
-                  onCloseMenu={() => {
-                    if (openMenuPropertyId === field.id) {
-                      setOpenMenuPropertyId?.(undefined);
-                    }
-                  }}
                 />
               );
             }}
@@ -66,4 +55,4 @@ function PropertyList(
   );
 }
 
-export default React.forwardRef(PropertyList);
+export default React.memo(React.forwardRef(PropertyList));

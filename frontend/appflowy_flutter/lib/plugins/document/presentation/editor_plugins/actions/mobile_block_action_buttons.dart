@@ -70,6 +70,7 @@ class MobileBlockActionButtons extends StatelessWidget {
     showMobileBottomSheet(
       context,
       showHeader: true,
+      showDragHandle: true,
       showCloseButton: true,
       title: LocaleKeys.document_plugins_action.tr(),
       builder: (context) {

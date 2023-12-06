@@ -346,7 +346,7 @@ impl DatabaseEditor {
         }
 
         let old_field_type = FieldType::from(field.field_type);
-        let old_type_option = field.get_any_type_option(old_field_type);
+        let old_type_option = field.get_any_type_option(old_field_type.clone());
         let new_type_option = field
           .get_any_type_option(new_field_type)
           .unwrap_or_else(|| default_type_option_data_from_type(new_field_type));
@@ -464,7 +464,7 @@ impl DatabaseEditor {
     field.map(|field| {
       let field_type = FieldType::from(field.field_type);
       let type_option = field
-        .get_any_type_option(field_type)
+        .get_any_type_option(field_type.clone())
         .unwrap_or_else(|| default_type_option_data_from_type(&field_type));
       (field, type_option_to_pb(type_option, &field_type))
     })
@@ -833,8 +833,6 @@ impl DatabaseEditor {
     for option in options {
       type_option.delete_option(&option.id);
     }
-
-    notify_did_update_database_field(&self.database, field_id)?;
     self
       .database
       .lock()
@@ -1265,7 +1263,7 @@ impl DatabaseViewOperation for DatabaseViewOperationImpl {
     let (_, field) = self.database.lock().create_field_with_mut(
       view_id,
       name.to_string(),
-      field_type.into(),
+      field_type.clone().into(),
       &OrderObjectPosition::default(),
       |field| {
         field
@@ -1501,10 +1499,10 @@ impl DatabaseViewOperation for DatabaseViewOperationImpl {
       .map(|field_id| {
         if !field_settings_map.contains_key(field_id) {
           let field_settings =
-            FieldSettings::from_any_map(field_id, layout_type, &default_field_settings);
+            FieldSettings::from_anymap(field_id, layout_type, &default_field_settings);
           (field_id.clone(), field_settings)
         } else {
-          let field_settings = FieldSettings::from_any_map(
+          let field_settings = FieldSettings::from_anymap(
             field_id,
             layout_type,
             field_settings_map.get(field_id).unwrap(),
@@ -1539,7 +1537,7 @@ impl DatabaseViewOperation for DatabaseViewOperationImpl {
         .unwrap()
         .to_owned();
       let field_settings =
-        FieldSettings::from_any_map(field_id, layout_type, &default_field_settings);
+        FieldSettings::from_anymap(field_id, layout_type, &default_field_settings);
       FieldSettings {
         field_id: field_settings.field_id.clone(),
         visibility: visibility.unwrap_or(field_settings.visibility),

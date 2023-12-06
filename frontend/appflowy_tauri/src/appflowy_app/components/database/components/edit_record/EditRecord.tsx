@@ -1,23 +1,18 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { TextCell } from '$app/components/database/application';
 import RecordDocument from '$app/components/database/components/edit_record/RecordDocument';
 import RecordHeader from '$app/components/database/components/edit_record/RecordHeader';
 import { Page } from '$app_reducers/pages/slice';
 import { PageController } from '$app/stores/effects/workspace/page/page_controller';
-import { ErrorCode, ViewLayoutPB } from '@/services/backend';
-import { Log } from '$app/utils/log';
-import { useDatabase } from '$app/components/database';
+import { ViewLayoutPB } from '@/services/backend';
 
 interface Props {
-  rowId: string;
+  cell: TextCell;
+  documentId: string;
+  icon?: string;
 }
-
-function EditRecord({ rowId }: Props) {
-  const { rowMetas } = useDatabase();
-  const row = useMemo(() => {
-    return rowMetas.find((row) => row.id === rowId);
-  }, [rowMetas, rowId]);
+function EditRecord({ documentId: id, cell, icon }: Props) {
   const [page, setPage] = useState<Page | null>(null);
-  const id = row?.documentId;
 
   const loadPage = useCallback(async () => {
     if (!id) return;
@@ -31,7 +26,7 @@ function EditRecord({ rowId }: Props) {
       // Record not found
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      if (e.code === ErrorCode.RecordNotFound) {
+      if (e.code === 3) {
         try {
           const page = await controller.createOrphanPage({
             name: '',
@@ -40,7 +35,7 @@ function EditRecord({ rowId }: Props) {
 
           setPage(page);
         } catch (e) {
-          Log.error(e);
+          console.error(e);
         }
       }
     }
@@ -51,10 +46,8 @@ function EditRecord({ rowId }: Props) {
   }, [loadPage]);
 
   const getDocumentTitle = useCallback(() => {
-    return row ? <RecordHeader page={page} row={row} /> : null;
-  }, [row, page]);
-
-  if (!id) return null;
+    return <RecordHeader page={page} cell={cell} icon={icon} />;
+  }, [cell, icon, page]);
 
   return (
     <div className={'h-full px-12 py-6'}>

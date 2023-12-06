@@ -12,7 +12,7 @@ impl FieldBuilder {
     let mut field = Field::new(
       gen_field_id(),
       "".to_string(),
-      field_type.into(),
+      field_type.clone().into(),
       false,
     );
     field.width = 150;

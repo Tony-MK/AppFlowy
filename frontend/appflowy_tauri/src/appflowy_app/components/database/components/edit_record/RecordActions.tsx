@@ -3,16 +3,17 @@ import { Icon, Menu, MenuProps } from '@mui/material';
 import { ReactComponent as DelSvg } from '$app/assets/delete.svg';
 import { ReactComponent as CopySvg } from '$app/assets/copy.svg';
 import { useTranslation } from 'react-i18next';
-import { rowService } from '$app/components/database/application';
+import { Cell, rowService } from '$app/components/database/application';
 import { useViewId } from '$app/hooks';
 import MenuItem from '@mui/material/MenuItem';
 
 interface Props extends MenuProps {
-  rowId: string;
+  cell: Cell;
   onClose?: () => void;
 }
-function RecordActions({ anchorEl, open, onClose, rowId }: Props) {
+function RecordActions({ anchorEl, open, onClose, cell }: Props) {
   const viewId = useViewId();
+  const rowId = cell.rowId;
   const { t } = useTranslation();
 
   const handleDelRow = useCallback(() => {

@@ -13,7 +13,6 @@ class MobileCellContainer extends StatelessWidget {
   final AccessoryBuilder? accessoryBuilder;
   final double width;
   final bool isPrimary;
-  final VoidCallback? onPrimaryFieldCellTap;
 
   const MobileCellContainer({
     super.key,
@@ -21,7 +20,6 @@ class MobileCellContainer extends StatelessWidget {
     required this.width,
     required this.isPrimary,
     this.accessoryBuilder,
-    this.onPrimaryFieldCellTap,
   });
 
   @override
@@ -50,17 +48,9 @@ class MobileCellContainer extends StatelessWidget {
             }
           }
 
-          if (isPrimary) {
-            container = IgnorePointer(child: container);
-          }
-
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {
-              if (isPrimary) {
-                onPrimaryFieldCellTap?.call();
-                return;
-              }
               if (!isFocus) {
                 child.requestFocus.notify();
               }

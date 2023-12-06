@@ -152,7 +152,6 @@ class _ViewTitleState extends State<_ViewTitle> {
 
   String name = '';
   String icon = '';
-  String inputtingName = '';
 
   @override
   void initState() {
@@ -267,18 +266,6 @@ class _ViewTitleState extends State<_ViewTitle> {
                   }
                   popoverController.close();
                 },
-                onChanged: (text) async {
-                  inputtingName = text;
-                },
-                onCanceled: () async {
-                  if (inputtingName.isNotEmpty && inputtingName != name) {
-                    await ViewBackendService.updateView(
-                      viewId: widget.view.id,
-                      name: inputtingName,
-                    );
-                    popoverController.close();
-                  }
-                },
               ),
             ),
             const HSpace(4.0),
@@ -293,7 +280,6 @@ class _ViewTitleState extends State<_ViewTitle> {
   }
 
   void _resetTextEditingController() {
-    inputtingName = name;
     textEditingController
       ..text = name
       ..selection = TextSelection(

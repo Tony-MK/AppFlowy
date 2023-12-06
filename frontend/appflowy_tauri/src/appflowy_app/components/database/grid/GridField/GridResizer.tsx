@@ -28,10 +28,13 @@ function GridResizer({ field, onWidthChange }: GridResizerProps) {
       }
 
       setNewWidth(newWidth);
-      onWidthChange?.(newWidth);
     },
-    [width, onWidthChange]
+    [width]
   );
+
+  useEffect(() => {
+    onWidthChange?.(newWidth);
+  }, [newWidth, onWidthChange]);
 
   useEffect(() => {
     if (!isResizing && width !== newWidth) {

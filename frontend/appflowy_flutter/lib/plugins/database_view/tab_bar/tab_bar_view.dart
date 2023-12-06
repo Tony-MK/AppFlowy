@@ -77,7 +77,11 @@ class _DatabaseTabBarViewState extends State<DatabaseTabBarView> {
           BlocListener<DatabaseTabBarBloc, DatabaseTabBarState>(
             listenWhen: (p, c) => p.selectedIndex != c.selectedIndex,
             listener: (context, state) {
-              _pageController?.jumpToPage(state.selectedIndex);
+              _pageController?.animateToPage(
+                state.selectedIndex,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.ease,
+              );
             },
           ),
         ],

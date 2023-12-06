@@ -65,7 +65,6 @@ module.exports = {
     "yellow": "var(--tint-yellow)",
     "pink": "var(--tint-pink)",
     "lime": "var(--tint-lime)",
-    "aqua": "var(--tint-aqua)",
-    "orange": "var(--tint-orange)",
+    "aqua": "var(--tint-aqua)"
   }
 }

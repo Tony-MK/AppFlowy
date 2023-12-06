@@ -6,9 +6,9 @@ import 'package:appflowy/plugins/database_view/application/cell/cell_controller_
 import 'package:appflowy_backend/protobuf/flowy-database2/select_option.pb.dart';
 import 'package:appflowy_popover/appflowy_popover.dart';
 import 'package:easy_localization/easy_localization.dart';
+
 import 'package:flowy_infra/theme_extension.dart';
 import 'package:flowy_infra_ui/flowy_infra_ui.dart';
-import 'package:flowy_infra_ui/style_widget/hover.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:textfield_tags/textfield_tags.dart';
@@ -27,7 +27,8 @@ class SelectOptionCellEditor extends StatefulWidget {
   final SelectOptionCellController cellController;
   static double editorPanelWidth = 300;
 
-  const SelectOptionCellEditor({super.key, required this.cellController});
+  const SelectOptionCellEditor({required this.cellController, Key? key})
+      : super(key: key);
 
   @override
   State<SelectOptionCellEditor> createState() => _SelectOptionCellEditorState();
@@ -81,7 +82,8 @@ class _OptionList extends StatelessWidget {
   const _OptionList({
     required this.popoverMutex,
     required this.tagController,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +138,8 @@ class _TextField extends StatelessWidget {
   const _TextField({
     required this.popoverMutex,
     required this.tagController,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -287,7 +290,8 @@ class _SelectOptionCell extends StatefulWidget {
     required this.option,
     required this.isSelected,
     required this.popoverMutex,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<_SelectOptionCell> createState() => _SelectOptionCellState();
@@ -340,16 +344,9 @@ class _SelectOptionCellState extends State<_SelectOptionCell> {
       asBarrier: true,
       constraints: BoxConstraints.loose(const Size(200, 470)),
       mutex: widget.popoverMutex,
-      clickHandler: PopoverClickHandler.gestureDetector,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
-        child: FlowyHover(
-          resetHoverOnRebuild: false,
-          style: HoverStyle(
-            hoverColor: AFThemeExtension.of(context).lightGreyHover,
-          ),
-          child: child,
-        ),
+        child: child,
       ),
       popupBuilder: (BuildContext popoverContext) {
         return SelectOptionTypeOptionEditor(

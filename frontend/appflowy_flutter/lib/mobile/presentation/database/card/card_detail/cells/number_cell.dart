@@ -51,10 +51,6 @@ class _RowDetailNumberCellState
         ],
         child: TextField(
           controller: _controller,
-          keyboardType: const TextInputType.numberWithOptions(
-            signed: true,
-            decimal: true,
-          ),
           focusNode: focusNode,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16),
           decoration: InputDecoration(

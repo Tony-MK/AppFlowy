@@ -36,25 +36,17 @@ languages.forEach(language => {
             console.error(res);
         }
     })
-});
-
-
+})
 function flattenJSON(obj, prefix = '') {
     let result = {};
-    const pluralsKey = ["one", "other", "few", "many", "two", "zero"];
 
     for (let key in obj) {
         if (typeof obj[key] === 'object' && obj[key] !== null) {
-
             const nestedKeys = flattenJSON(obj[key], `${prefix}${key}.`);
             result = { ...result, ...nestedKeys };
         } else {
-            let newKey = `${prefix}${key}`;
-            let replaceChar = '{'
-            if (pluralsKey.includes(key)) {
-                newKey = `${prefix.slice(0, -1)}_${key}`;
-            }
-            result[newKey] = obj[key].replaceAll('{', '{{').replaceAll('}', '}}');
+
+            result[`${prefix}${key}`] = obj[key].replaceAll('{', '{{').replaceAll('}', '}}');
         }
     }
 

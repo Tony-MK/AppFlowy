@@ -10,7 +10,6 @@ export interface UseDraggableOptions {
   disabled?: boolean;
   scrollOnEdge?: {
     direction?: ScrollDirection;
-    getScrollElement?: () => HTMLElement | null;
     edgeGap?: number | Partial<EdgeGap>;
   };
 }
@@ -74,8 +73,7 @@ export const useDraggable = ({
         return;
       }
 
-      const scrollParent: HTMLElement | null =
-        scrollOnEdge?.getScrollElement?.() ?? getScrollParent(event.target as HTMLElement, scrollDirection);
+      const scrollParent: HTMLElement | null = getScrollParent(event.target as HTMLElement, scrollDirection);
 
       if (scrollParent) {
         autoScrollOnEdge({
@@ -85,7 +83,7 @@ export const useDraggable = ({
         });
       }
     },
-    [context, effectAllowed, scrollDirection, scrollOnEdge, edgeGap]
+    [context, effectAllowed, scrollDirection, edgeGap]
   );
 
   const onDragEnd = useCallback<DragEventHandler>(() => {

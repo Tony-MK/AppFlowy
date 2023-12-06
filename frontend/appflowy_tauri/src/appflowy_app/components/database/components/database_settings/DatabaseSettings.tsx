@@ -31,4 +31,4 @@ function DatabaseSettings(props: Props) {
   );
 }
 
-export default DatabaseSettings;
+export default React.memo(DatabaseSettings);

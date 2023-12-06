@@ -60,14 +60,13 @@ void showSnackBarMessage(
           ? null
           : SnackBarAction(
               label: LocaleKeys.button_cancel.tr(),
-              textColor: Colors.white,
+              textColor: Theme.of(context).colorScheme.onSurface,
               onPressed: () {
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
               },
             ),
       content: FlowyText(
         message,
-        color: Colors.white,
       ),
     ),
   );

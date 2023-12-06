@@ -1,7 +1,8 @@
 import 'package:appflowy/generated/locale_keys.g.dart';
 import 'package:appflowy/mobile/presentation/base/app_bar_actions.dart';
 import 'package:appflowy/mobile/presentation/database/card/card_detail/widgets/_field_options_eidtor.dart';
-import 'package:appflowy/plugins/database_view/application/field/field_backend_service.dart';
+import 'package:appflowy/plugins/database_view/application/field/field_service.dart';
+import 'package:appflowy/plugins/database_view/application/field_settings/field_settings_service.dart';
 import 'package:appflowy_backend/protobuf/flowy-database2/protobuf.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flowy_infra_ui/flowy_infra_ui.dart';
@@ -12,15 +13,18 @@ class MobileEditPropertyScreen extends StatefulWidget {
   static const routeName = '/edit_property';
   static const argViewId = 'view_id';
   static const argField = 'field';
+  static const argIsPrimary = 'is_primary';
 
   const MobileEditPropertyScreen({
     super.key,
     required this.viewId,
     required this.field,
+    this.isPrimary = false,
   });
 
   final String viewId;
   final FieldPB field;
+  final bool isPrimary;
 
   @override
   State<MobileEditPropertyScreen> createState() =>
@@ -75,25 +79,29 @@ class _MobileEditPropertyScreenState extends State<MobileEditPropertyScreen> {
           }
           return FieldOptionEditor(
             mode: FieldOptionMode.edit,
-            isPrimary: widget.field.isPrimary,
+            isPrimary: widget.isPrimary,
             defaultValues: optionValues,
             onOptionValuesChanged: (optionValues) {
               this.optionValues = optionValues;
             },
             onAction: (action) {
-              final service = FieldServices(
+              final service = FieldBackendService(
                 viewId: viewId,
                 fieldId: fieldId,
               );
               switch (action) {
                 case FieldOptionAction.delete:
-                  service.delete();
+                  service.deleteField();
                   break;
                 case FieldOptionAction.duplicate:
-                  service.duplicate();
+                  service.duplicateField();
                   break;
                 case FieldOptionAction.hide:
-                  service.hide();
+                  FieldSettingsBackendService(viewId: viewId)
+                      .updateFieldSettings(
+                    fieldId: fieldId,
+                    fieldVisibility: FieldVisibility.AlwaysHidden,
+                  );
                   break;
               }
               context.pop();
